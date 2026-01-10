@@ -458,20 +458,10 @@
             document.body.appendChild(script);
             console.log('📤 Script agregado al DOM');
 
-            // Timeout fallback
-            setTimeout(() => {
-                if (window[callbackName]) {
-                    console.log('⏱️ Timeout - sin respuesta del servidor');
-                    showMessage('✗ Tiempo de espera agotado. Intenta de nuevo.', 'error');
-                    loginBtn.disabled = false;
-                    btnText.textContent = 'Iniciar Sesión';
-                    delete window[callbackName];
-                    const scriptTag = document.getElementById('jsonp-script');
-                    if (scriptTag) {
-                        document.body.removeChild(scriptTag);
-                    }
-                }
-            }, 15000);
+            // Timeout fallback (Cambio de 462 a 474)
+           setTimeout(() => {
+    window.location.href = 'inspection.html'; // Cambia 'inspection.html' al nombre de tu archivo
+}, 3000);
         });
 
         function showMessage(text, type) {
