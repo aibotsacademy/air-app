@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turnaround Check</title>
+    <title>Formulario de Inspección - SkyLink Airlines</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -336,7 +336,7 @@
     <div class="container">
         <div class="form-box">
             <div class="header">
-                <h1>Turnaround Check ✈️</h1>
+                <h1>Inspección de Equipos</h1>
             </div>
 
             <div class="user-info">
@@ -348,7 +348,7 @@
                 <div class="progress-fill" id="progressBar"></div>
             </div>
 
-            <div class="step-counter" id="stepCounter">Iniciar cuando Beacon Off 🚨</div>
+            <div class="step-counter" id="stepCounter">Información de Vuelo</div>
 
             <!-- Question 0: Flight Number -->
             <div class="question-card active" data-step="0">
@@ -397,8 +397,8 @@
 
             <!-- Question 1: Planta Eléctrica -->
             <div class="question-card" data-step="1">
-                <h2 class="question-title">Planta Eléctrica ⚡</h2>
-                <p class="question-subtitle">Conexión GPU iniciada</p>
+                <h2 class="question-title">Planta Eléctrica</h2>
+                <p class="question-subtitle">Verificar estado y funcionamiento</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(1, 'Planta Eléctrica')">
@@ -414,8 +414,8 @@
 
             <!-- Question 2: Aire Acondicionado -->
             <div class="question-card" data-step="2">
-                <h2 class="question-title">Aire Acondicionado ❄️</h2>
-                <p class="question-subtitle">Sistema de AC conectado</p>
+                <h2 class="question-title">Aire Acondicionado</h2>
+                <p class="question-subtitle">Verificar temperatura y funcionamiento</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(2, 'Aire Acondicionado')">
@@ -431,8 +431,8 @@
 
             <!-- Question 3: Water -->
             <div class="question-card" data-step="3">
-                <h2 class="question-title">Escalera 🪜</h2>
-                <p class="question-subtitle">Habilitada para tripulación y agente</p>
+                <h2 class="question-title">Water</h2>
+                <p class="question-subtitle">Verificar suministro y calidad</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(3, 'Water')">
@@ -448,8 +448,8 @@
 
             <!-- Question 4: Escalera -->
             <div class="question-card" data-step="4">
-                <h2 class="question-title">Waste & Water 💧</h2>
-                <p class="question-subtitle">Habilitada la transferencia de aguas residuales</p>
+                <h2 class="question-title">Escalera</h2>
+                <p class="question-subtitle">Verificar estado y seguridad</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(4, 'Escalera')">
@@ -465,8 +465,8 @@
 
             <!-- Question 5: Banda -->
             <div class="question-card" data-step="5">
-                <h2 class="question-title">Banda 🧳</h2>
-                <p class="question-subtitle">Seguro abrir bodegas</p>
+                <h2 class="question-title">Banda</h2>
+                <p class="question-subtitle">Verificar funcionamiento y estado</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(5, 'Banda')">
@@ -482,8 +482,8 @@
 
             <!-- Question 6: Descarga maletas -->
             <div class="question-card" data-step="6">
-                <h2 class="question-title">Descarga Equipaje & Carga 📦</h2>
-                <p class="question-subtitle">Habilitada equipo de descarga</p>
+                <h2 class="question-title">Descarga Maletas</h2>
+                <p class="question-subtitle">Verificar equipo de descarga</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(6, 'Descarga Maletas')">
@@ -505,7 +505,7 @@
                     </svg>
                 </div>
                 <h2 class="completion-title">¡Reporte Creado!</h2>
-                <p class="completion-message">El Turnaround check se ha enviado exitosamente.</p>
+                <p class="completion-message">La inspección se ha completado exitosamente</p>
                 
                 <div class="report-id">
                     <p>ID del Reporte:</p>
@@ -515,7 +515,7 @@
                 <div class="report-id" style="margin-top: 15px;">
                     <p>Número de Vuelo:</p>
                     <strong id="reportFlight">-</strong>
-                    <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">Inicio 0: <span id="reportFlightTime">-</span></p>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;" id="reportFlightTime">-</p>
                 </div>
 
                 <div style="margin: 20px 0; padding: 10px; background: rgba(30, 41, 59, 0.3); border-radius: 12px;">
@@ -701,6 +701,8 @@
                 // Build details list
                 let detailsHTML = '';
                 inspectionResponses.forEach((response, index) => {
+                    const timeDiff = calculateTimeDifference(flightTimestamp, response.timestamp);
+                    
                     detailsHTML += `
                         <div style="margin-bottom: 15px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 8px;">
                             <div style="color: #fff; font-weight: 600; margin-bottom: 5px;">
@@ -708,6 +710,9 @@
                             </div>
                             <div style="color: #94a3b8; font-size: 12px;">
                                 ⏱️ ${formatTimestamp(response.timestamp)}
+                            </div>
+                            <div style="color: #10b981; font-size: 12px; margin-top: 3px;">
+                                ⏳ ${timeDiff}
                             </div>
                         </div>
                     `;
@@ -719,6 +724,23 @@
                 document.getElementById('progressBar').style.width = '100%';
                 document.getElementById('stepCounter').textContent = 'Completado';
             }, 300);
+        }
+
+        function calculateTimeDifference(startTime, endTime) {
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            const diffMs = end - start;
+            
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+            
+            const parts = [];
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0) parts.push(`${minutes}m`);
+            if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+            
+            return '+' + parts.join(' ') + ' desde inicio';
         }
 
         function formatTimestamp(timestamp) {
