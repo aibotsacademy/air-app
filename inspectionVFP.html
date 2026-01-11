@@ -336,7 +336,7 @@
     <div class="container">
         <div class="form-box">
             <div class="header">
-                <h1>Inspección de Equipos</h1>
+                <h1>Turnaround Check ✈️</h1>
             </div>
 
             <div class="user-info">
@@ -348,7 +348,7 @@
                 <div class="progress-fill" id="progressBar"></div>
             </div>
 
-            <div class="step-counter" id="stepCounter">Información de Vuelo</div>
+            <div class="step-counter" id="stepCounter">Iniciar cuando Beacon Off 🚨</div>
 
             <!-- Question 0: Flight Number -->
             <div class="question-card active" data-step="0">
@@ -374,7 +374,7 @@
                 </div>
 
                 <div style="margin: 20px 0;">
-                    <label style="display: block; color: #cbd5e1; font-size: 14px; margin-bottom: 8px; font-weight: 500;">Número de Vuelo</label>
+                    <label style="display: block; color: #cbd5e1; font-size: 14px; margin-bottom: 8px; font-weight: 500;"># de Vuelo</label>
                     <input 
                         type="text" 
                         id="flightNumber" 
@@ -397,8 +397,8 @@
 
             <!-- Question 1: Planta Eléctrica -->
             <div class="question-card" data-step="1">
-                <h2 class="question-title">Planta Eléctrica</h2>
-                <p class="question-subtitle">Verificar estado y funcionamiento</p>
+                <h2 class="question-title">Planta Eléctrica ⚡</h2>
+                <p class="question-subtitle">Conexión GPU iniciada</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(1, 'Planta Eléctrica')">
@@ -414,8 +414,8 @@
 
             <!-- Question 2: Aire Acondicionado -->
             <div class="question-card" data-step="2">
-                <h2 class="question-title">Aire Acondicionado</h2>
-                <p class="question-subtitle">Verificar temperatura y funcionamiento</p>
+                <h2 class="question-title">Aire Acondicionado ❄️</h2>
+                <p class="question-subtitle">Sistema de AC conectado</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(2, 'Aire Acondicionado')">
@@ -431,8 +431,8 @@
 
             <!-- Question 3: Water -->
             <div class="question-card" data-step="3">
-                <h2 class="question-title">Water</h2>
-                <p class="question-subtitle">Verificar suministro y calidad</p>
+                <h2 class="question-title">Escalera 🪜</h2>
+                <p class="question-subtitle">Habilitada para tripulación y agente</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(3, 'Water')">
@@ -448,8 +448,8 @@
 
             <!-- Question 4: Escalera -->
             <div class="question-card" data-step="4">
-                <h2 class="question-title">Escalera</h2>
-                <p class="question-subtitle">Verificar estado y seguridad</p>
+                <h2 class="question-title">Waste & Water 💧a</h2>
+                <p class="question-subtitle">Habilitada la transferencia de aguas residuales</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(4, 'Escalera')">
@@ -466,7 +466,7 @@
             <!-- Question 5: Banda -->
             <div class="question-card" data-step="5">
                 <h2 class="question-title">Banda</h2>
-                <p class="question-subtitle">Verificar funcionamiento y estado</p>
+                <p class="question-subtitle">Seguro abrir bodegas</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(5, 'Banda')">
@@ -482,8 +482,8 @@
 
             <!-- Question 6: Descarga maletas -->
             <div class="question-card" data-step="6">
-                <h2 class="question-title">Descarga Maletas</h2>
-                <p class="question-subtitle">Verificar equipo de descarga</p>
+                <h2 class="question-title">Descarga Equipaje & Carga 📦 </h2>
+                <p class="question-subtitle">Habilitada equipo de descarga</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
                         <input type="checkbox" onchange="nextStep(6, 'Descarga Maletas')">
@@ -515,7 +515,7 @@
                 <div class="report-id" style="margin-top: 15px;">
                     <p>Número de Vuelo:</p>
                     <strong id="reportFlight">-</strong>
-                    <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;" id="reportFlightTime">-</p>
+                   <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">Inicio 0: <span id="reportFlightTime">-</span></p>
                 </div>
 
                 <div style="margin: 20px 0; padding: 10px; background: rgba(30, 41, 59, 0.3); border-radius: 12px;">
