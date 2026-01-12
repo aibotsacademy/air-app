@@ -392,12 +392,8 @@
         const messageDiv = document.getElementById('message');
         const loginBtn = document.getElementById('loginBtn');
 
-        // Admin credentials
-        const ADMIN_CREDENTIALS = [
-            { username: 'admin@aerojethandlinggroup.com', password: 'Admin2025!', role: 'Super Admin' },
-            { username: 'admin', password: 'admin123', role: 'Admin' },
-            { username: 'supervisor@aerojet.com', password: 'super123', role: 'Supervisor' }
-        ];
+        // Apps Script URL for authentication
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwratJLa8uJ_EYMIOPbzkh4YlrahSPUdEonIeFHtsA5fAzlxMyRFyuOeHd6sxughzXL/exec';
 
         function showMessage(text, type) {
             messageDiv.textContent = text;
@@ -433,40 +429,85 @@
                 return;
             }
 
+            // Disable button
             loginBtn.disabled = true;
             loginBtn.textContent = 'Validando credenciales...';
 
-            setTimeout(() => {
-                const admin = ADMIN_CREDENTIALS.find(
-                    cred => cred.username === username && cred.password === password
-                );
-
-                if (admin) {
+            // Create unique callback name
+            const callbackName = 'adminCallback' + Date.now();
+            
+            // Define callback function
+            window[callbackName] = function(response) {
+                console.log('Respuesta del servidor:', response);
+                
+                // Clean up
+                delete window[callbackName];
+                const script = document.getElementById('auth-script');
+                if (script) document.body.removeChild(script);
+                
+                // Process response
+                if (response.success === true) {
                     showMessage('✓ Autenticación exitosa. Redirigiendo...', 'success');
                     
-                    const adminData = {
-                        username: admin.username,
-                        role: admin.role,
-                        loginTime: new Date().toISOString(),
-                        isAdmin: true
-                    };
+                    // Verify if user is admin
+                    const isAdmin = response.role && (
+                        response.role.toLowerCase().includes('admin') || 
+                        response.role.toLowerCase().includes('supervisor')
+                    );
                     
-                    sessionStorage.setItem('adminUser', JSON.stringify(adminData));
-                    
-                    setTimeout(() => {
-                        window.location.href = 'adminDashboard.html';
-                    }, 1500);
+                    if (isAdmin) {
+                        const adminData = {
+                            username: response.username,
+                            role: response.role,
+                            loginTime: new Date().toISOString(),
+                            isAdmin: true
+                        };
+                        
+                        sessionStorage.setItem('adminUser', JSON.stringify(adminData));
+                        
+                        setTimeout(() => {
+                            window.location.href = 'adminDashboard.html';
+                        }, 1500);
+                    } else {
+                        showMessage('✗ Acceso denegado. Solo administradores pueden acceder.', 'error');
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = 'Iniciar Sesión Administrativa';
+                    }
                 } else {
-                    showMessage('✗ Credenciales inválidas. Acceso denegado.', 'error');
+                    showMessage('✗ ' + (response.message || 'Credenciales inválidas. Acceso denegado.'), 'error');
                     loginBtn.disabled = false;
                     loginBtn.textContent = 'Iniciar Sesión Administrativa';
                     
+                    // Shake animation
                     form.style.animation = 'shake 0.5s';
                     setTimeout(() => {
                         form.style.animation = '';
                     }, 500);
                 }
-            }, 1500);
+            };
+
+            // Build URL with parameters
+            const url = SCRIPT_URL + 
+                '?username=' + encodeURIComponent(username) +
+                '&password=' + encodeURIComponent(password) +
+                '&callback=' + callbackName;
+
+            console.log('Enviando petición de autenticación...');
+
+            // Create script tag for JSONP
+            const script = document.createElement('script');
+            script.id = 'auth-script';
+            script.src = url;
+            
+            script.onerror = function() {
+                console.error('Error de conexión con el servidor');
+                showMessage('✗ Error de conexión. Verifica tu conexión a internet.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión Administrativa';
+                delete window[callbackName];
+            };
+            
+            document.body.appendChild(script);
         });
 
         const style = document.createElement('style');
@@ -486,3 +527,4 @@
     </script>
 </body>
 </html>
+
