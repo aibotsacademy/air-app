@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnaround Check - Operations Hub</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .form-box {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 24px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        0 0 100px rgba(59, 130, 246, 0.1);
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 12px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .user-info span {
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .user-info .role {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        .step-counter {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            display: none;
+            animation: fadeInScale 0.4s ease;
+        }
+
+        .question-card.active {
+            display: block;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .question-title {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .question-subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
+        .custom-checkbox {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .checkmark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox:hover .checkmark {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.05);
+        }
+
+        .custom-checkbox input:checked ~ .checkmark {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-color: transparent;
+        }
+
+        .checkmark svg {
+            width: 40px;
+            height: 40px;
+            stroke: #fff;
+            stroke-width: 3;
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .custom-checkbox input:checked ~ .checkmark svg {
+            stroke-dashoffset: 0;
+        }
+
+        .checkbox-label {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #cbd5e1;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .completion-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .completion-screen.active {
+            display: block;
+        }
+
+        .completion-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .completion-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: #fff;
+            stroke-width: 3;
+        }
+
+        .completion-title {
+            font-size: 32px;
+            color: #fff;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .completion-message {
+            color: #94a3b8;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .report-id {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 30px;
+        }
+
+        .report-id p {
+            color: #cbd5e1;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .report-id strong {
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .btn-new-report {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-new-report:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            color: #fca5a5;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .select-field:focus {
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .select-field option {
+            background: #1e293b;
+            color: #fff;
+        }
+
+        .form-label {
+            display: block;
+            color: #cbd5e1;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .btn-continue {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-continue:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .form-box {
+                padding: 30px 25px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .question-title {
+                font-size: 20px;
+            }
+        }
+
+        .incident-option {
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .incident-option:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .incident-option.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .photo-upload-area {
+            border: 2px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        .photo-upload-area:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .photo-preview-item {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .photo-preview-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .photo-remove-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        textarea.input-field {
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <button class="logout-btn" onclick="logout()">🚪 Cerrar Sesión</button>
+
+    <div class="container">
+        <div class="form-box">
+            <div class="header">
+                <h1>✈️ Turnaround Check</h1>
+            </div>
+
+            <div class="user-info">
+                <span id="userName">Cargando...</span>
+                <span class="role" id="userRole">-</span>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <div class="step-counter" id="stepCounter">Iniciar cuando Beacon Off 🚨</div>
+
+            <!-- Question 0: Flight Number -->
+            <div class="question-card active" data-step="0">
+                <h2 class="question-title">Información de Vuelo</h2>
+                <p class="question-subtitle">Seleccione aerolínea e ingrese número de vuelo</p>
+                
+                <div style="margin: 20px 0;">
+                    <label class="form-label">Aerolínea</label>
+                    <select id="airlineSelect" class="select-field">
+                        <option value="">Seleccione una aerolínea</option>
+                        <option value="DL">Delta</option>
+                        <option value="WN">Southwest</option>
+                        <option value="E9">Iberojet</option>
+                        <option value="AV">Avianca</option>
+                        <option value="UA">United</option>
+                        <option value="AA">American Airlines</option>
+                    </select>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <label class="form-label"># de Vuelo</label>
+                    <input 
+                        type="text" 
+                        id="flightNumber" 
+                        class="input-field"
+                        placeholder="Ej: 1234"
+                    >
+                </div>
+                
+                <button onclick="submitFlightNumber()" class="btn-continue">
+                    Continuar →
+                </button>
+            </div>
+
+            <!-- Question 1: Planta Eléctrica -->
+            <div class="question-card" data-step="1">
+                <h2 class="question-title">Planta Eléctrica ⚡</h2>
+                <p class="question-subtitle">Conexión GPU iniciada</p>
+                <div class="checkbox-container">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" onchange="nextStep(1, 'Planta Eléctrica')">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+                <span class="checkbox-label">Marcar como completado</span>
+            </div>
+
+            <!-- Question 2: Aire Acondicionado -->
+            <div class="question-card" data-step="2">
+                <h2 class="question-title">Aire Acondicionado ❄️</h2>
+                <p class="question-subtitle">Sistema de AC conectado</p>
+                <div class="checkbox-container">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" onchange="nextStep(2, 'Aire Acondicionado')">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+                <span class="checkbox-label">Marcar como completado</span>
+            </div>
+
+            <!-- Question 3: Escalera -->
+            <div class="question-card" data-step="3">
+                <h2 class="question-title">Escalera 🪜</h2>
+                <p class="question-subtitle">Habilitada para tripulación y agente</p>
+                <div class="checkbox-container">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" onchange="nextStep(3, 'Escalera')">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+                <span class="checkbox-label">Marcar como completado</span>
+            </div>
+
+            <!-- Question 4: Waste & Water -->
+            <div class="question-card" data-step="4">
+                <h2 class="question-title">Waste & Water 💧</h2>
+                <p class="question-subtitle">Habilitada la transferencia de aguas residuales</p>
+                <div class="checkbox-container">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" onchange="nextStep(4, 'Waste & Water')">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+                <span class="checkbox-label">Marcar como completado</span>
+            </div>
+
+            <!-- Question 5: Banda -->
+            <div class="question-card" data-step="5">
+                <h2 class="question-title">Banda 📦</h2>
+                <p class="question-subtitle">Seguro abrir bodegas</p>
+                <div class="checkbox-container">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" onchange="nextStep(5, 'Banda')">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+                <span class="checkbox-label">Marcar como completado</span>
+            </div>
+
+            <!-- Question 6: Descarga equipaje -->
+            <div class="question-card" data-step="6">
+                <h2 class="question-title">Descarga Equipaje & Carga 🛄</h2>
+                <p class="question-subtitle">Habilitado equipo de descarga</p>
+                <div class="checkbox-container">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" onchange="nextStep(6, 'Descarga Equipaje')">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+                <span class="checkbox-label">Marcar como completado</span>
+            </div>
+
+            <!-- Question 7: Reporte de Incidentes -->
+            <div class="question-card" data-step="7">
+                <h2 class="question-title">Reporte de Incidentes 📋</h2>
+                <p class="question-subtitle">¿Hubo algún incidente durante el turnaround?</p>
+                
+                <div style="margin: 25px 0;">
+                    <label class="form-label">¿Reportar incidente?</label>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <label style="flex: 1; cursor: pointer;">
+                            <input type="radio" name="hasIncident" value="no" checked onchange="toggleIncidentForm(false)"
+                                   style="display: none;">
+                            <div id="noIncidentBtn" class="incident-option active">
+                                <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+                                <div style="font-weight: 600; color: #fff;">Sin Incidentes</div>
+                            </div>
+                        </label>
+                        <label style="flex: 1; cursor: pointer;">
+                            <input type="radio" name="hasIncident" value="yes" onchange="toggleIncidentForm(true)"
+                                   style="display: none;">
+                            <div id="yesIncidentBtn" class="incident-option">
+                                <div style="font-size: 32px; margin-bottom: 8px;">⚠️</div>
+                                <div style="font-weight: 600; color: #fff;">Reportar Incidente</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Formulario de incidente (oculto por defecto) -->
+                <div id="incidentForm" style="display: none; margin-top: 25px;">
+                    <div style="margin-bottom: 20px;">
+                        <label class="form-label">Descripción del Incidente *</label>
+                        <textarea 
+                            id="incidentDescription" 
+                            class="input-field"
+                            placeholder="Describe detalladamente lo que ocurrió..."
+                            rows="4"
+                            style="resize: vertical; font-family: inherit;"
+                        ></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="form-label">Tipo de Incidente</label>
+                        <select id="incidentType" class="select-field">
+                            <option value="">Seleccione un tipo</option>
+                            <option value="Daño a Equipo">Daño a Equipo</option>
+                            <option value="Daño a Aeronave">Daño a Aeronave</option>
+                            <option value="Lesión Personal">Lesión Personal</option>
+                            <option value="Retraso Operacional">Retraso Operacional</option>
+                            <option value="Falla de Equipo">Falla de Equipo</option>
+                            <option value="Derrame">Derrame</option>
+                            <option value="FOD">FOD (Foreign Object Damage)</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="form-label">Severidad</label>
+                        <select id="incidentSeverity" class="select-field">
+                            <option value="Baja">🟢 Baja - Sin impacto operacional</option>
+                            <option value="Media" selected>🟡 Media - Requiere atención</option>
+                            <option value="Alta">🔴 Alta - Requiere acción inmediata</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="form-label">Fotos del Incidente (Opcional)</label>
+                        <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
+                            <div style="color: #94a3b8; font-size: 14px; margin-bottom: 5px;">
+                                Click para agregar fotos
+                            </div>
+                            <div style="color: #64748b; font-size: 12px;">
+                                Puedes agregar múltiples fotos
+                            </div>
+                        </div>
+                        <input 
+                            type="file" 
+                            id="photoInput" 
+                            accept="image/*" 
+                            multiple 
+                            style="display: none;"
+                            onchange="handlePhotoUpload(event)"
+                        >
+                        <div id="photoPreview" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+
+                <button onclick="submitIncidentReport()" class="btn-continue">
+                    Finalizar Turnaround Check →
+                </button>
+            </div>
+
+            <!-- Completion Screen -->
+            <div class="completion-screen">
+                <div class="completion-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2 class="completion-title">¡Turnaround Completado!</h2>
+                <p class="completion-message">Todos los pasos se han registrado exitosamente</p>
+                
+                <div class="report-id">
+                    <p>ID del Reporte:</p>
+                    <strong id="reportId">-</strong>
+                </div>
+                
+                <div class="report-id" style="margin-top: 15px;">
+                    <p>Número de Vuelo:</p>
+                    <strong id="reportFlight">-</strong>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">
+                        Inicio: <span id="reportFlightTime">-</span>
+                    </p>
+                </div>
+
+                <div style="margin: 20px 0; padding: 15px; background: rgba(30, 41, 59, 0.3); border-radius: 12px;">
+                    <div id="reportDetails" style="text-align: left;"></div>
+                </div>
+
+                <button class="btn-new-report" onclick="newReport()">
+                    🔄 Nuevo Turnaround Check
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // THREE.JS BACKGROUND ANIMATION
+        // ============================================
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 100;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.08,
+            color: 0x3b82f6,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = 30;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.y += 0.0005;
+            particlesMesh.rotation.x += 0.0003;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ============================================
+        // AUTHENTICATION CHECK
+        // ============================================
+        const userData = sessionStorage.getItem('user');
+        if (!userData) {
+            window.location.href = 'login.html';
+        } else {
+            const user = JSON.parse(userData);
+            document.getElementById('userName').textContent = user.username;
+            document.getElementById('userRole').textContent = user.role;
+        }
+
+        // ============================================
+        // CONFIGURACIÓN DEL APPS SCRIPT
+        // ⚙️ REEMPLAZA CON TU URL DEL APPS SCRIPT DE TURNAROUND
+        // ============================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/TU_URL_DEL_APPS_SCRIPT_TURNAROUND/exec';
+
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
+        const userDataString = sessionStorage.getItem('user');
+        let inspectionUser = JSON.parse(userDataString);
+
+        let currentStep = 0;
+        const totalSteps = 7; // Ahora incluye paso de incidentes
+        let flightNumberValue = '';
+        let flightTimestamp = '';
+        let inspectionResponses = [];
+        let incidentPhotos = []; // Array para guardar fotos
+
+        // ============================================
+        // FUNCIÓN: ENVIAR NÚMERO DE VUELO (PASO 0)
+        // ============================================
+        function submitFlightNumber() {
+            const airlineCode = document.getElementById('airlineSelect').value;
+            const flightNumber = document.getElementById('flightNumber').value.trim();
+            
+            if (!airlineCode) {
+                alert('⚠️ Por favor seleccione una aerolínea');
+                return;
+            }
+            
+            if (!flightNumber) {
+                alert('⚠️ Por favor ingrese el número de vuelo');
+                return;
+            }
+            
+            flightNumberValue = airlineCode + ' ' + flightNumber;
+            flightTimestamp = new Date().toISOString();
+            
+            console.log('✈️ Vuelo:', flightNumberValue, '- Timestamp:', flightTimestamp);
+            
+            // Enviar a Google Sheets
+            sendToSheet(0, 'Vuelo: ' + flightNumberValue, flightTimestamp);
+            
+            // Ocultar paso 0
+            document.querySelector('[data-step="0"]').classList.remove('active');
+            
+            // Mostrar paso 1 después de animación
+            setTimeout(() => {
+                currentStep = 1;
+                document.querySelector('[data-step="1"]').classList.add('active');
+                updateProgress();
+            }, 300);
+        }
+
+        // ============================================
+        // FUNCIÓN: AVANZAR AL SIGUIENTE PASO
+        // ============================================
+        function nextStep(step, item) {
+            const timestamp = new Date().toISOString();
+            
+            console.log(`✅ Completado: ${item} - ${timestamp}`);
+            
+            // Guardar respuesta con timestamp
+            inspectionResponses.push({
+                step: step,
+                item: item,
+                timestamp: timestamp
+            });
+            
+            // Enviar a Google Sheets
+            sendToSheet(step, item, timestamp);
+
+            if (step < totalSteps) {
+                // Ocultar paso actual
+                document.querySelector(`[data-step="${step}"]`).classList.remove('active');
+                
+                // Mostrar siguiente paso
+                setTimeout(() => {
+                    currentStep = step + 1;
+                    document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+                    updateProgress();
+                }, 300);
+            } else {
+                // Esto ya no se usa porque el paso 7 no usa checkbox
+                completeInspection();
+            }
+        }
+
+        // ============================================
+        // FUNCIÓN: TOGGLE FORMULARIO DE INCIDENTE
+        // ============================================
+        function toggleIncidentForm(show) {
+            const incidentForm = document.getElementById('incidentForm');
+            const noBtn = document.getElementById('noIncidentBtn');
+            const yesBtn = document.getElementById('yesIncidentBtn');
+            
+            if (show) {
+                incidentForm.style.display = 'block';
+                noBtn.classList.remove('active');
+                yesBtn.classList.add('active');
+            } else {
+                incidentForm.style.display = 'none';
+                yesBtn.classList.remove('active');
+                noBtn.classList.add('active');
+                
+                // Limpiar formulario
+                document.getElementById('incidentDescription').value = '';
+                document.getElementById('incidentType').value = '';
+                document.getElementById('incidentSeverity').value = 'Media';
+                incidentPhotos = [];
+                document.getElementById('photoPreview').innerHTML = '';
+            }
+        }
+
+        // ============================================
+        // FUNCIÓN: MANEJAR SUBIDA DE FOTOS
+        // ============================================
+        function handlePhotoUpload(event) {
+            const files = event.target.files;
+            const previewContainer = document.getElementById('photoPreview');
+            
+            console.log(`📷 ${files.length} foto(s) seleccionada(s)`);
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Validar tamaño (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`⚠️ La foto "${file.name}" es muy grande. Máximo 5MB por foto.`);
+                    continue;
+                }
+                
+                // Validar tipo
+                if (!file.type.startsWith('image/')) {
+                    alert(`⚠️ "${file.name}" no es una imagen válida.`);
+                    continue;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const photoData = {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        data: e.target.result, // Base64
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    incidentPhotos.push(photoData);
+                    
+                    console.log(`✅ Foto "${file.name}" cargada (${(file.size / 1024).toFixed(2)} KB)`);
+                    
+                    // Crear preview
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'photo-preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" class="photo-preview-img" alt="${file.name}">
+                        <button class="photo-remove-btn" onclick="removePhoto(${incidentPhotos.length - 1})" title="Eliminar">
+                            ✕
+                        </button>
+                    `;
+                    
+                    previewContainer.appendChild(previewItem);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            // Limpiar input para permitir seleccionar las mismas fotos de nuevo
+            event.target.value = '';
+        }
+
+        // ============================================
+        // FUNCIÓN: ELIMINAR FOTO
+        // ============================================
+        function removePhoto(index) {
+            console.log(`🗑️ Eliminando foto ${index}`);
+            
+            incidentPhotos.splice(index, 1);
+            
+            // Reconstruir preview
+            const previewContainer = document.getElementById('photoPreview');
+            previewContainer.innerHTML = '';
+            
+            incidentPhotos.forEach((photo, i) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'photo-preview-item';
+                previewItem.innerHTML = `
+                    <img src="${photo.data}" class="photo-preview-img" alt="${photo.name}">
+                    <button class="photo-remove-btn" onclick="removePhoto(${i})" title="Eliminar">
+                        ✕
+                    </button>
+                `;
+                previewContainer.appendChild(previewItem);
+            });
+        }
+
+        // ============================================
+        // FUNCIÓN: ENVIAR REPORTE DE INCIDENTE
+        // ============================================
+        function submitIncidentReport() {
+            const hasIncident = document.querySelector('input[name="hasIncident"]:checked').value === 'yes';
+            const timestamp = new Date().toISOString();
+            
+            let incidentData = {
+                hasIncident: hasIncident,
+                description: 'Sin incidentes reportados',
+                type: '',
+                severity: '',
+                photoCount: 0,
+                timestamp: timestamp
+            };
+            
+            if (hasIncident) {
+                const description = document.getElementById('incidentDescription').value.trim();
+                const type = document.getElementById('incidentType').value;
+                const severity = document.getElementById('incidentSeverity').value;
+                
+                // Validar descripción obligatoria
+                if (!description) {
+                    alert('⚠️ Por favor describe el incidente');
+                    document.getElementById('incidentDescription').focus();
+                    return;
+                }
+                
+                incidentData = {
+                    hasIncident: true,
+                    description: description,
+                    type: type || 'No especificado',
+                    severity: severity,
+                    photoCount: incidentPhotos.length,
+                    timestamp: timestamp
+                };
+                
+                console.log('📋 Incidente reportado:', incidentData);
+                console.log('📷 Fotos adjuntas:', incidentPhotos.length);
+            } else {
+                console.log('✅ Sin incidentes reportados');
+            }
+            
+            // Guardar en array de respuestas
+            inspectionResponses.push({
+                step: 7,
+                item: 'Reporte de Incidentes',
+                timestamp: timestamp,
+                incidentData: incidentData,
+                photos: incidentPhotos
+            });
+            
+            // Enviar a Google Sheets
+            sendIncidentToSheet(incidentData);
+            
+            // Completar inspección
+            completeInspection();
+        }
+
+        // ============================================
+        // FUNCIÓN: ACTUALIZAR BARRA DE PROGRESO
+        // ============================================
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('stepCounter').textContent = `Paso ${currentStep} de ${totalSteps}`;
+        }
+
+        // ============================================
+        // FUNCIÓN: ENVIAR DATOS A GOOGLE SHEETS
+        // ============================================
+        function sendToSheet(step, item, timestamp) {
+            console.log('📤 Enviando a Google Sheets:', {
+                step: step,
+                item: item,
+                timestamp: timestamp,
+                user: inspectionUser.username,
+                role: inspectionUser.role
+            });
+
+            // Crear URL con parámetros
+            const url = SCRIPT_URL + 
+                '?user=' + encodeURIComponent(inspectionUser.username) +
+                '&role=' + encodeURIComponent(inspectionUser.role) +
+                '&step=' + step +
+                '&item=' + encodeURIComponent(item) +
+                '&timestamp=' + encodeURIComponent(timestamp);
+
+            console.log('🔗 URL completa:', url);
+
+            // Enviar petición usando fetch
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Respuesta del servidor:', data);
+                    if (data.success) {
+                        console.log('✅ Datos guardados exitosamente');
+                        if (data.reportNumber) {
+                            console.log('📋 Número de reporte:', data.reportNumber);
+                        }
+                    } else {
+                        console.error('❌ Error del servidor:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error enviando datos:', error);
+                });
+        }
+
+        // ============================================
+        // FUNCIÓN: ENVIAR INCIDENTE A GOOGLE SHEETS
+        // ============================================
+        function sendIncidentToSheet(incidentData) {
+            console.log('📤 Enviando incidente a Google Sheets:', incidentData);
+
+            // Crear URL con parámetros de incidente
+            const url = SCRIPT_URL + 
+                '?user=' + encodeURIComponent(inspectionUser.username) +
+                '&role=' + encodeURIComponent(inspectionUser.role) +
+                '&step=7' +
+                '&item=' + encodeURIComponent('Reporte de Incidentes') +
+                '&timestamp=' + encodeURIComponent(incidentData.timestamp) +
+                '&hasIncident=' + encodeURIComponent(incidentData.hasIncident) +
+                '&incidentDescription=' + encodeURIComponent(incidentData.description) +
+                '&incidentType=' + encodeURIComponent(incidentData.type) +
+                '&incidentSeverity=' + encodeURIComponent(incidentData.severity) +
+                '&photoCount=' + encodeURIComponent(incidentData.photoCount);
+
+            console.log('🔗 URL incidente:', url);
+
+            // Enviar petición
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Respuesta incidente:', data);
+                    
+                    // Si hay fotos, enviarlas por separado
+                    if (incidentPhotos.length > 0) {
+                        console.log(`📷 Enviando ${incidentPhotos.length} foto(s)...`);
+                        // Nota: Las fotos se guardan localmente en el navegador
+                        // Para enviarlas al servidor necesitarías un endpoint adicional
+                        // Por ahora se guardan en la respuesta del completion screen
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error enviando incidente:', error);
+                });
+        }
+
+        // ============================================
+        // FUNCIÓN: COMPLETAR INSPECCIÓN
+        // ============================================
+        function completeInspection() {
+            const reportId = 'TRN-' + Date.now();
+            
+            console.log('🎉 Turnaround Check completado');
+            
+            // Ocultar todos los pasos
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // Mostrar pantalla de completado
+            setTimeout(() => {
+                // Establecer ID de reporte y vuelo
+                document.getElementById('reportId').textContent = reportId;
+                document.getElementById('reportFlight').textContent = flightNumberValue;
+                document.getElementById('reportFlightTime').textContent = formatTimestamp(flightTimestamp);
+                
+                // Construir lista de detalles
+                let detailsHTML = '';
+                inspectionResponses.forEach((response, index) => {
+                    const timeDiff = calculateTimeDifference(flightTimestamp, response.timestamp);
+                    
+                    let itemHtml = `
+                        <div style="margin-bottom: 12px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 8px;">
+                            <div style="color: #fff; font-weight: 600; margin-bottom: 5px; font-size: 14px;">
+                                ${index + 1}. ${response.item}
+                            </div>
+                            <div style="color: #94a3b8; font-size: 12px;">
+                                ⏱️ ${formatTimestamp(response.timestamp)}
+                            </div>
+                            <div style="color: #10b981; font-size: 12px; margin-top: 3px;">
+                                ⏳ ${timeDiff}
+                            </div>
+                    `;
+                    
+                    // Si es el paso de incidente, agregar detalles adicionales
+                    if (response.step === 7 && response.incidentData) {
+                        const incident = response.incidentData;
+                        if (incident.hasIncident) {
+                            itemHtml += `
+                                <div style="margin-top: 10px; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">
+                                    <div style="color: #fca5a5; font-weight: 600; font-size: 13px; margin-bottom: 5px;">
+                                        ⚠️ Incidente Reportado
+                                    </div>
+                                    <div style="color: #cbd5e1; font-size: 12px; margin-bottom: 3px;">
+                                        <strong>Tipo:</strong> ${incident.type}
+                                    </div>
+                                    <div style="color: #cbd5e1; font-size: 12px; margin-bottom: 3px;">
+                                        <strong>Severidad:</strong> ${incident.severity}
+                                    </div>
+                                    <div style="color: #cbd5e1; font-size: 12px; margin-bottom: 3px;">
+                                        <strong>Descripción:</strong> ${incident.description}
+                                    </div>
+                                    ${incident.photoCount > 0 ? `
+                                        <div style="color: #cbd5e1; font-size: 12px;">
+                                            <strong>Fotos:</strong> ${incident.photoCount} adjunta(s) 📷
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                            
+                            // Mostrar previews de fotos si hay
+                            if (response.photos && response.photos.length > 0) {
+                                itemHtml += `
+                                    <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+                                `;
+                                response.photos.forEach((photo, photoIndex) => {
+                                    itemHtml += `
+                                        <img src="${photo.data}" 
+                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3);"
+                                             alt="Foto ${photoIndex + 1}"
+                                             onclick="showPhotoModal('${photo.data}', '${photo.name}')">
+                                    `;
+                                });
+                                itemHtml += `</div>`;
+                            }
+                        } else {
+                            itemHtml += `
+                                <div style="margin-top: 10px; padding: 8px; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
+                                    <div style="color: #6ee7b7; font-size: 12px;">
+                                        ✅ Sin incidentes reportados
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    itemHtml += `</div>`;
+                    detailsHTML += itemHtml;
+                });
+                
+                document.getElementById('reportDetails').innerHTML = detailsHTML;
+                
+                // Mostrar pantalla de completado
+                document.querySelector('.completion-screen').classList.add('active');
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('stepCounter').textContent = '✅ Completado';
+            }, 300);
+        }
+
+        // ============================================
+        // FUNCIÓN: MOSTRAR FOTO EN MODAL
+        // ============================================
+        function showPhotoModal(photoData, photoName) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="position: relative; max-width: 90%; max-height: 90%;">
+                    <img src="${photoData}" 
+                         style="max-width: 100%; max-height: 90vh; border-radius: 12px;"
+                         alt="${photoName}">
+                    <div style="text-align: center; color: #fff; margin-top: 15px; font-size: 14px;">
+                        ${photoName}
+                    </div>
+                    <button onclick="this.closest('div').parentElement.remove()"
+                            style="position: absolute; top: -40px; right: 0; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer;">
+                        ✕
+                    </button>
+                </div>
+            `;
+            
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+            
+            document.body.appendChild(modal);
+        }
+
+        // ============================================
+        // FUNCIÓN: CALCULAR DIFERENCIA DE TIEMPO
+        // ============================================
+        function calculateTimeDifference(startTime, endTime) {
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            const diffMs = end - start;
+            
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+            
+            const parts = [];
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0) parts.push(`${minutes}m`);
+            if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+            
+            return '+' + parts.join(' ') + ' desde inicio';
+        }
+
+        // ============================================
+        // FUNCIÓN: FORMATEAR TIMESTAMP
+        // ============================================
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // ============================================
+        // FUNCIÓN: NUEVO REPORTE
+        // ============================================
+        function newReport() {
+            // Reiniciar variables
+            currentStep = 0;
+            flightNumberValue = '';
+            flightTimestamp = '';
+            inspectionResponses = [];
+            incidentPhotos = [];
+            
+            // Limpiar formulario
+            document.getElementById('airlineSelect').value = '';
+            document.getElementById('flightNumber').value = '';
+            
+            // Limpiar formulario de incidente
+            document.querySelector('input[name="hasIncident"][value="no"]').checked = true;
+            toggleIncidentForm(false);
+
+            // Ocultar pantalla de completado
+            document.querySelector('.completion-screen').classList.remove('active');
+            
+            // Mostrar paso 0
+            document.querySelector('[data-step="0"]').classList.add('active');
+            
+            // Limpiar checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            
+            // Reiniciar barra de progreso
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('stepCounter').textContent = 'Iniciar cuando Beacon Off 🚨';
+        }
+
+        // ============================================
+        // FUNCIÓN: CERRAR SESIÓN
+        // ============================================
+        function logout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                sessionStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // ============================================
+        // LOG INICIAL
+        // ============================================
+        console.log('📋 Turnaround Check cargado');
+        console.log('👤 Usuario:', inspectionUser.username);
+        console.log('👔 Rol:', inspectionUser.role);
+        console.log('🔗 Apps Script URL:', SCRIPT_URL);
+        
+        if (SCRIPT_URL.includes('TU_URL_DEL_APPS_SCRIPT_TURNAROUND')) {
+            console.warn('⚠️ ADVERTENCIA: Apps Script URL no configurada');
+            console.warn('⚠️ Configura la URL en la línea del código que dice: const SCRIPT_URL = ...');
+        }
+    </script>
+</body>
+</html>
