@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario de Inspección - SkyLink Airlines</title>
+    <title>Turnaround Check - Operations Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -327,29 +326,99 @@
             background: rgba(239, 68, 68, 0.3);
             transform: translateY(-2px);
         }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .select-field:focus {
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .select-field option {
+            background: #1e293b;
+            color: #fff;
+        }
+
+        .form-label {
+            display: block;
+            color: #cbd5e1;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .btn-continue {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-continue:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .form-box {
+                padding: 30px 25px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .question-title {
+                font-size: 20px;
+            }
+        }
     </style>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1PYNBFGPML"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-1PYNBFGPML');
-</script>
-
-    
 </head>
 <body>
     <div id="canvas-container"></div>
 
-    <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+    <button class="logout-btn" onclick="logout()">🚪 Cerrar Sesión</button>
 
     <div class="container">
         <div class="form-box">
             <div class="header">
-                <h1>Turnaround Check ✈️</h1>
+                <h1>✈️ Turnaround Check</h1>
             </div>
 
             <div class="user-info">
@@ -369,42 +438,30 @@
                 <p class="question-subtitle">Seleccione aerolínea e ingrese número de vuelo</p>
                 
                 <div style="margin: 20px 0;">
-                    <label style="display: block; color: #cbd5e1; font-size: 14px; margin-bottom: 8px; font-weight: 500;">Aerolínea</label>
-                    <select 
-                        id="airlineSelect" 
-                        style="width: 100%; padding: 16px 20px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; color: #fff; font-size: 16px; outline: none; transition: all 0.3s ease; cursor: pointer;"
-                        onfocus="this.style.borderColor='#3b82f6'; this.style.background='rgba(30, 41, 59, 0.8)'"
-                        onblur="this.style.borderColor='rgba(59, 130, 246, 0.3)'; this.style.background='rgba(30, 41, 59, 0.6)'"
-                    >
-                        <option value="" style="background: #1e293b; color: #94a3b8;">Seleccione una aerolínea</option>
-                        <option value="DL" style="background: #1e293b; color: #fff;">Delta</option>
-                        <option value="WN" style="background: #1e293b; color: #fff;">Southwest</option>
-                        <option value="E9" style="background: #1e293b; color: #fff;">Iberojet</option>
-                        <option value="AV" style="background: #1e293b; color: #fff;">Avianca</option>
-                        <option value="UA" style="background: #1e293b; color: #fff;">United</option>
-                        <option value="AA" style="background: #1e293b; color: #fff;">American</option>
+                    <label class="form-label">Aerolínea</label>
+                    <select id="airlineSelect" class="select-field">
+                        <option value="">Seleccione una aerolínea</option>
+                        <option value="DL">Delta</option>
+                        <option value="WN">Southwest</option>
+                        <option value="E9">Iberojet</option>
+                        <option value="AV">Avianca</option>
+                        <option value="UA">United</option>
+                        <option value="AA">American Airlines</option>
                     </select>
                 </div>
 
                 <div style="margin: 20px 0;">
-                    <label style="display: block; color: #cbd5e1; font-size: 14px; margin-bottom: 8px; font-weight: 500;"># de Vuelo</label>
+                    <label class="form-label"># de Vuelo</label>
                     <input 
                         type="text" 
                         id="flightNumber" 
+                        class="input-field"
                         placeholder="Ej: 1234"
-                        style="width: 100%; padding: 16px 20px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; color: #fff; font-size: 16px; outline: none; transition: all 0.3s ease;"
-                        onfocus="this.style.borderColor='#3b82f6'; this.style.background='rgba(30, 41, 59, 0.8)'"
-                        onblur="this.style.borderColor='rgba(59, 130, 246, 0.3)'; this.style.background='rgba(30, 41, 59, 0.6)'"
                     >
                 </div>
                 
-                <button 
-                    onclick="submitFlightNumber()"
-                    style="width: 100%; padding: 16px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 10px;"
-                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 30px rgba(59, 130, 246, 0.4)'"
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
-                >
-                    Continuar
+                <button onclick="submitFlightNumber()" class="btn-continue">
+                    Continuar →
                 </button>
             </div>
 
@@ -442,13 +499,13 @@
                 <span class="checkbox-label">Marcar como completado</span>
             </div>
 
-            <!-- Question 3: Water -->
+            <!-- Question 3: Escalera -->
             <div class="question-card" data-step="3">
                 <h2 class="question-title">Escalera 🪜</h2>
                 <p class="question-subtitle">Habilitada para tripulación y agente</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
-                        <input type="checkbox" onchange="nextStep(3, 'Water')">
+                        <input type="checkbox" onchange="nextStep(3, 'Escalera')">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -459,13 +516,13 @@
                 <span class="checkbox-label">Marcar como completado</span>
             </div>
 
-            <!-- Question 4: Escalera -->
+            <!-- Question 4: Waste & Water -->
             <div class="question-card" data-step="4">
                 <h2 class="question-title">Waste & Water 💧</h2>
                 <p class="question-subtitle">Habilitada la transferencia de aguas residuales</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
-                        <input type="checkbox" onchange="nextStep(4, 'Escalera')">
+                        <input type="checkbox" onchange="nextStep(4, 'Waste & Water')">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -478,7 +535,7 @@
 
             <!-- Question 5: Banda -->
             <div class="question-card" data-step="5">
-                <h2 class="question-title">Banda</h2>
+                <h2 class="question-title">Banda 📦</h2>
                 <p class="question-subtitle">Seguro abrir bodegas</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
@@ -493,13 +550,13 @@
                 <span class="checkbox-label">Marcar como completado</span>
             </div>
 
-            <!-- Question 6: Descarga maletas -->
+            <!-- Question 6: Descarga equipaje -->
             <div class="question-card" data-step="6">
-                <h2 class="question-title">Descarga Equipaje & Carga 📦 </h2>
-                <p class="question-subtitle">Habilitada equipo de descarga</p>
+                <h2 class="question-title">Descarga Equipaje & Carga 🛄</h2>
+                <p class="question-subtitle">Habilitado equipo de descarga</p>
                 <div class="checkbox-container">
                     <label class="custom-checkbox">
-                        <input type="checkbox" onchange="nextStep(6, 'Descarga Maletas')">
+                        <input type="checkbox" onchange="nextStep(6, 'Descarga Equipaje')">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -517,8 +574,8 @@
                         <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <h2 class="completion-title">¡Reporte Creado!</h2>
-                <p class="completion-message">La inspección se ha completado exitosamente</p>
+                <h2 class="completion-title">¡Turnaround Completado!</h2>
+                <p class="completion-message">Todos los pasos se han registrado exitosamente</p>
                 
                 <div class="report-id">
                     <p>ID del Reporte:</p>
@@ -528,20 +585,26 @@
                 <div class="report-id" style="margin-top: 15px;">
                     <p>Número de Vuelo:</p>
                     <strong id="reportFlight">-</strong>
-                   <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">Inicio 0: <span id="reportFlightTime">-</span></p>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">
+                        Inicio: <span id="reportFlightTime">-</span>
+                    </p>
                 </div>
 
-                <div style="margin: 20px 0; padding: 10px; background: rgba(30, 41, 59, 0.3); border-radius: 12px;">
+                <div style="margin: 20px 0; padding: 15px; background: rgba(30, 41, 59, 0.3); border-radius: 12px;">
                     <div id="reportDetails" style="text-align: left;"></div>
                 </div>
 
-                <button class="btn-new-report" onclick="newReport()">Nueva Inspección</button>
+                <button class="btn-new-report" onclick="newReport()">
+                    🔄 Nuevo Turnaround Check
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // Three.js background
+        // ============================================
+        // THREE.JS BACKGROUND ANIMATION
+        // ============================================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -587,7 +650,9 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Check authentication
+        // ============================================
+        // AUTHENTICATION CHECK
+        // ============================================
         const userData = sessionStorage.getItem('user');
         if (!userData) {
             window.location.href = 'login.html';
@@ -597,9 +662,15 @@
             document.getElementById('userRole').textContent = user.role;
         }
 
-        // Apps Script URL
-        const SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+        // ============================================
+        // CONFIGURACIÓN DEL APPS SCRIPT
+        // ⚙️ REEMPLAZA CON TU URL DEL APPS SCRIPT DE TURNAROUND
+        // ============================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/TU_URL_DEL_APPS_SCRIPT_TURNAROUND/exec';
 
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
         const userDataString = sessionStorage.getItem('user');
         let inspectionUser = JSON.parse(userDataString);
 
@@ -609,17 +680,20 @@
         let flightTimestamp = '';
         let inspectionResponses = [];
 
+        // ============================================
+        // FUNCIÓN: ENVIAR NÚMERO DE VUELO (PASO 0)
+        // ============================================
         function submitFlightNumber() {
             const airlineCode = document.getElementById('airlineSelect').value;
             const flightNumber = document.getElementById('flightNumber').value.trim();
             
             if (!airlineCode) {
-                alert('Por favor seleccione una aerolínea');
+                alert('⚠️ Por favor seleccione una aerolínea');
                 return;
             }
             
             if (!flightNumber) {
-                alert('Por favor ingrese el número de vuelo');
+                alert('⚠️ Por favor ingrese el número de vuelo');
                 return;
             }
             
@@ -628,10 +702,13 @@
             
             console.log('✈️ Vuelo:', flightNumberValue, '- Timestamp:', flightTimestamp);
             
+            // Enviar a Google Sheets
             sendToSheet(0, 'Vuelo: ' + flightNumberValue, flightTimestamp);
             
+            // Ocultar paso 0
             document.querySelector('[data-step="0"]').classList.remove('active');
             
+            // Mostrar paso 1 después de animación
             setTimeout(() => {
                 currentStep = 1;
                 document.querySelector('[data-step="1"]').classList.add('active');
@@ -639,86 +716,118 @@
             }, 300);
         }
 
+        // ============================================
+        // FUNCIÓN: AVANZAR AL SIGUIENTE PASO
+        // ============================================
         function nextStep(step, item) {
             const timestamp = new Date().toISOString();
             
             console.log(`✅ Completado: ${item} - ${timestamp}`);
             
-            // Save response with timestamp
+            // Guardar respuesta con timestamp
             inspectionResponses.push({
                 step: step,
                 item: item,
                 timestamp: timestamp
             });
             
+            // Enviar a Google Sheets
             sendToSheet(step, item, timestamp);
 
             if (step < totalSteps) {
+                // Ocultar paso actual
                 document.querySelector(`[data-step="${step}"]`).classList.remove('active');
                 
+                // Mostrar siguiente paso
                 setTimeout(() => {
                     currentStep = step + 1;
                     document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
                     updateProgress();
                 }, 300);
             } else {
+                // Último paso - completar inspección
                 completeInspection();
             }
         }
 
+        // ============================================
+        // FUNCIÓN: ACTUALIZAR BARRA DE PROGRESO
+        // ============================================
         function updateProgress() {
             const progress = (currentStep / totalSteps) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('stepCounter').textContent = `Pregunta ${currentStep} de ${totalSteps}`;
+            document.getElementById('stepCounter').textContent = `Paso ${currentStep} de ${totalSteps}`;
         }
 
+        // ============================================
+        // FUNCIÓN: ENVIAR DATOS A GOOGLE SHEETS
+        // ============================================
         function sendToSheet(step, item, timestamp) {
-            const callbackName = 'callback' + Date.now();
-            
-            window[callbackName] = function(response) {
-                console.log('Respuesta del servidor:', response);
-                delete window[callbackName];
-                const script = document.getElementById('data-script');
-                if (script) document.body.removeChild(script);
-            };
+            console.log('📤 Enviando a Google Sheets:', {
+                step: step,
+                item: item,
+                timestamp: timestamp,
+                user: inspectionUser.username,
+                role: inspectionUser.role
+            });
 
+            // Crear URL con parámetros
             const url = SCRIPT_URL + 
                 '?user=' + encodeURIComponent(inspectionUser.username) +
                 '&role=' + encodeURIComponent(inspectionUser.role) +
                 '&step=' + step +
                 '&item=' + encodeURIComponent(item) +
-                '&timestamp=' + encodeURIComponent(timestamp) +
-                '&callback=' + callbackName;
+                '&timestamp=' + encodeURIComponent(timestamp);
 
-            const script = document.createElement('script');
-            script.id = 'data-script';
-            script.src = url;
-            document.body.appendChild(script);
+            console.log('🔗 URL completa:', url);
+
+            // Enviar petición usando fetch
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Respuesta del servidor:', data);
+                    if (data.success) {
+                        console.log('✅ Datos guardados exitosamente');
+                        if (data.reportNumber) {
+                            console.log('📋 Número de reporte:', data.reportNumber);
+                        }
+                    } else {
+                        console.error('❌ Error del servidor:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error enviando datos:', error);
+                });
         }
 
+        // ============================================
+        // FUNCIÓN: COMPLETAR INSPECCIÓN
+        // ============================================
         function completeInspection() {
-            const reportId = 'RPT-' + Date.now();
+            const reportId = 'TRN-' + Date.now();
             
-            console.log('🎉 Inspección completada');
+            console.log('🎉 Turnaround Check completado');
             
+            // Ocultar todos los pasos
             document.querySelectorAll('.question-card').forEach(card => {
                 card.classList.remove('active');
             });
 
+            // Mostrar pantalla de completado
             setTimeout(() => {
-                // Set report ID and flight
+                // Establecer ID de reporte y vuelo
                 document.getElementById('reportId').textContent = reportId;
                 document.getElementById('reportFlight').textContent = flightNumberValue;
                 document.getElementById('reportFlightTime').textContent = formatTimestamp(flightTimestamp);
                 
-                // Build details list
+                // Construir lista de detalles
                 let detailsHTML = '';
                 inspectionResponses.forEach((response, index) => {
                     const timeDiff = calculateTimeDifference(flightTimestamp, response.timestamp);
                     
                     detailsHTML += `
-                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 8px;">
-                            <div style="color: #fff; font-weight: 600; margin-bottom: 5px;">
+                        <div style="margin-bottom: 12px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 8px;">
+                            <div style="color: #fff; font-weight: 600; margin-bottom: 5px; font-size: 14px;">
                                 ${index + 1}. ${response.item}
                             </div>
                             <div style="color: #94a3b8; font-size: 12px;">
@@ -733,12 +842,16 @@
                 
                 document.getElementById('reportDetails').innerHTML = detailsHTML;
                 
+                // Mostrar pantalla de completado
                 document.querySelector('.completion-screen').classList.add('active');
                 document.getElementById('progressBar').style.width = '100%';
-                document.getElementById('stepCounter').textContent = 'Completado';
+                document.getElementById('stepCounter').textContent = '✅ Completado';
             }, 300);
         }
 
+        // ============================================
+        // FUNCIÓN: CALCULAR DIFERENCIA DE TIEMPO
+        // ============================================
         function calculateTimeDifference(startTime, endTime) {
             const start = new Date(startTime);
             const end = new Date(endTime);
@@ -756,6 +869,9 @@
             return '+' + parts.join(' ') + ' desde inicio';
         }
 
+        // ============================================
+        // FUNCIÓN: FORMATEAR TIMESTAMP
+        // ============================================
         function formatTimestamp(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleString('es-ES', {
@@ -768,27 +884,57 @@
             });
         }
 
+        // ============================================
+        // FUNCIÓN: NUEVO REPORTE
+        // ============================================
         function newReport() {
+            // Reiniciar variables
             currentStep = 0;
             flightNumberValue = '';
             flightTimestamp = '';
             inspectionResponses = [];
+            
+            // Limpiar formulario
             document.getElementById('airlineSelect').value = '';
             document.getElementById('flightNumber').value = '';
 
+            // Ocultar pantalla de completado
             document.querySelector('.completion-screen').classList.remove('active');
+            
+            // Mostrar paso 0
             document.querySelector('[data-step="0"]').classList.add('active');
             
+            // Limpiar checkboxes
             document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
             
+            // Reiniciar barra de progreso
             document.getElementById('progressBar').style.width = '0%';
-            document.getElementById('stepCounter').textContent = 'Información de Vuelo';
+            document.getElementById('stepCounter').textContent = 'Iniciar cuando Beacon Off 🚨';
         }
 
+        // ============================================
+        // FUNCIÓN: CERRAR SESIÓN
+        // ============================================
         function logout() {
-            sessionStorage.removeItem('user');
-            window.location.href = 'login.html';
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                sessionStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // ============================================
+        // LOG INICIAL
+        // ============================================
+        console.log('📋 Turnaround Check cargado');
+        console.log('👤 Usuario:', inspectionUser.username);
+        console.log('👔 Rol:', inspectionUser.role);
+        console.log('🔗 Apps Script URL:', SCRIPT_URL);
+        
+        if (SCRIPT_URL.includes('TU_URL_DEL_APPS_SCRIPT_TURNAROUND')) {
+            console.warn('⚠️ ADVERTENCIA: Apps Script URL no configurada');
+            console.warn('⚠️ Configura la URL en la línea del código que dice: const SCRIPT_URL = ...');
         }
     </script>
 </body>
 </html>
+
