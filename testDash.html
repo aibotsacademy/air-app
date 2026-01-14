@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroJet - Dashboard Administrativo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141829;
+            --bg-card: #1a1f35;
+            --bg-card-hover: #1f2540;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #7c3aed;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2d3548;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
+            --glow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 50%);
+            animation: backgroundFloat 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes backgroundFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(2deg); }
+            66% { transform: translate(-20px, 20px) rotate(-2deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 800;
+            box-shadow: var(--glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: var(--glow); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 212, 255, 0.5); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-top: 0.25rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.6s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent-primary);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-change.positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-success);
+        }
+
+        .stat-change.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+        }
+
+        .stat-change.neutral {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-secondary);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .chart-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Table */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+        }
+
+        .filter-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .filter-btn:hover:not(.active) {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        thead th:first-child {
+            border-radius: 12px 0 0 0;
+        }
+
+        thead th:last-child {
+            border-radius: 0 12px 0 0;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        tbody td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+        }
+
+        .badge-info {
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--accent-primary);
+        }
+
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Refresh Indicator */
+        .refresh-indicator {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 1000;
+            transform: translateY(-150%);
+            transition: transform 0.3s ease;
+        }
+
+        .refresh-indicator.show {
+            transform: translateY(0);
+        }
+
+        .refresh-icon {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--accent-primary);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 2.5rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Score Color Coding */
+        .score-excellent {
+            color: var(--accent-success);
+            font-weight: 700;
+        }
+
+        .score-good {
+            color: var(--accent-warning);
+            font-weight: 700;
+        }
+
+        .score-poor {
+            color: var(--accent-danger);
+            font-weight: 700;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">✈</div>
+                    <div>
+                        <h1>Dashboard Operacional</h1>
+                        <div class="subtitle">AEROJET HANDLING GROUP</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <span>🔄</span>
+                        <span>Actualizar</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="window.location.href='inspectionVFP.html'">
+                        <span>➕</span>
+                        <span>Nuevo Turnaround</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Refresh Indicator -->
+        <div class="refresh-indicator" id="refreshIndicator">
+            <div class="refresh-icon"></div>
+            <span>Actualizando datos...</span>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be populated here -->
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section" id="chartsSection">
+            <!-- Charts will be populated here -->
+        </div>
+
+        <!-- Recent Turnarounds Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <div>
+                    <h2 class="table-title">Turnarounds Recientes</h2>
+                    <div class="chart-subtitle">Últimas operaciones completadas</div>
+                </div>
+                <div class="table-filters">
+                    <button class="filter-btn active" onclick="filterTable('all')">Todos</button>
+                    <button class="filter-btn" onclick="filterTable('TURN')">TURN</button>
+                    <button class="filter-btn" onclick="filterTable('ROW-ARRIVAL')">ARRIVAL</button>
+                    <button class="filter-btn" onclick="filterTable('ROW-DEPARTURE')">DEPARTURE</button>
+                </div>
+            </div>
+            <div id="tableContainer">
+                <!-- Table will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN
+        // ============================================
+        const SCRIPT_URL = 'TU_URL_DE_APPS_SCRIPT_AQUI';
+        const REFRESH_INTERVAL = 30000; // 30 segundos
+        let currentFilter = 'all';
+        let turnaroundsData = [];
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Dashboard inicializado');
+            loadDashboardData();
+            
+            // Auto-refresh cada 30 segundos
+            setInterval(() => {
+                loadDashboardData(true);
+            }, REFRESH_INTERVAL);
+        });
+
+        // ============================================
+        // CARGAR DATOS DEL DASHBOARD
+        // ============================================
+        async function loadDashboardData(silent = false) {
+            if (!silent) {
+                showLoading();
+            } else {
+                showRefreshIndicator();
+            }
+
+            try {
+                // Llamar al Apps Script para obtener datos
+                const response = await fetch(SCRIPT_URL + '?action=getDashboardData');
+                const data = await response.json();
+
+                if (data.success) {
+                    turnaroundsData = data.turnarounds || [];
+                    renderStats(data.stats || {});
+                    renderCharts(data.charts || {});
+                    renderTable(turnaroundsData);
+                } else {
+                    console.error('Error:', data.message);
+                    showError('Error al cargar datos: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError('Error de conexión. Verifique la URL del script.');
+            } finally {
+                hideLoading();
+                hideRefreshIndicator();
+            }
+        }
+
+        // ============================================
+        // RENDERIZAR ESTADÍSTICAS
+        // ============================================
+        function renderStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            const statsCards = [
+                {
+                    label: 'Total Turnarounds',
+                    value: stats.total || 0,
+                    icon: '✈️',
+                    color: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+                    change: stats.totalChange || 0,
+                    changeLabel: 'vs. mes anterior'
+                },
+                {
+                    label: 'Completados Hoy',
+                    value: stats.today || 0,
+                    icon: '✅',
+                    color: 'linear-gradient(135deg, #10b981, #059669)',
+                    change: stats.todayChange || 0,
+                    changeLabel: 'vs. ayer'
+                },
+                {
+                    label: 'Tiempo Promedio',
+                    value: (stats.avgTime || 0) + 'm',
+                    icon: '⏱️',
+                    color: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    change: stats.avgTimeChange || 0,
+                    changeLabel: 'vs. promedio'
+                },
+                {
+                    label: 'Cumplimiento SLA',
+                    value: (stats.slaCompliance || 0) + '%',
+                    icon: '🎯',
+                    color: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                    change: stats.slaChange || 0,
+                    changeLabel: 'vs. objetivo'
+                },
+                {
+                    label: 'Score Promedio',
+                    value: (stats.avgScore || 0) + '%',
+                    icon: '⭐',
+                    color: 'linear-gradient(135deg, #ec4899, #db2777)',
+                    change: stats.scoreChange || 0,
+                    changeLabel: 'vs. mes anterior'
+                },
+                {
+                    label: 'En Proceso',
+                    value: stats.inProgress || 0,
+                    icon: '🔄',
+                    color: 'linear-gradient(135deg, #06b6d4, #0284c7)',
+                    change: 0,
+                    changeLabel: 'activos ahora'
+                }
+            ];
+
+            statsGrid.innerHTML = statsCards.map(card => `
+                <div class="stat-card" style="animation: slideUp 0.6s ease forwards; opacity: 0;">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-label">${card.label}</div>
+                        </div>
+                        <div class="stat-icon" style="background: ${card.color};">
+                            ${card.icon}
+                        </div>
+                    </div>
+                    <div class="stat-value" style="background: ${card.color}; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        ${card.value}
+                    </div>
+                    <div class="stat-change ${getChangeClass(card.change)}">
+                        ${card.change > 0 ? '↑' : card.change < 0 ? '↓' : '•'} 
+                        ${Math.abs(card.change)}% ${card.changeLabel}
+                    </div>
+                </div>
+            `).join('');
+
+            // Trigger animations
+            setTimeout(() => {
+                document.querySelectorAll('.stat-card').forEach((card, index) => {
+                    card.style.animationDelay = (index * 0.1) + 's';
+                });
+            }, 10);
+        }
+
+        function getChangeClass(change) {
+            if (change > 0) return 'positive';
+            if (change < 0) return 'negative';
+            return 'neutral';
+        }
+
+        // ============================================
+        // RENDERIZAR GRÁFICAS
+        // ============================================
+        function renderCharts(charts) {
+            const chartsSection = document.getElementById('chartsSection');
+            
+            chartsSection.innerHTML = `
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Tendencia de Turnarounds</h3>
+                        <div class="chart-subtitle">Últimos 7 días</div>
+                    </div>
+                    <canvas id="trendChart" height="250"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Distribución por Tipo</h3>
+                        <div class="chart-subtitle">Este mes</div>
+                    </div>
+                    <canvas id="typeChart" height="250"></canvas>
+                </div>
+            `;
+
+            // Aquí puedes agregar Chart.js o una librería similar
+            renderSimpleCharts(charts);
+        }
+
+        function renderSimpleCharts(charts) {
+            // Por ahora, mostrar placeholder
+            // En producción, usar Chart.js
+            const trendCanvas = document.getElementById('trendChart');
+            const typeCanvas = document.getElementById('typeChart');
+            
+            if (trendCanvas && typeCanvas) {
+                const ctx1 = trendCanvas.getContext('2d');
+                const ctx2 = typeCanvas.getContext('2d');
+                
+                // Placeholder visual
+                ctx1.fillStyle = 'rgba(0, 212, 255, 0.1)';
+                ctx1.fillRect(0, 0, trendCanvas.width, trendCanvas.height);
+                ctx1.fillStyle = '#64748b';
+                ctx1.font = '14px Outfit';
+                ctx1.textAlign = 'center';
+                ctx1.fillText('Gráfica de tendencias (próximamente)', trendCanvas.width/2, trendCanvas.height/2);
+
+                ctx2.fillStyle = 'rgba(124, 58, 237, 0.1)';
+                ctx2.fillRect(0, 0, typeCanvas.width, typeCanvas.height);
+                ctx2.fillStyle = '#64748b';
+                ctx2.font = '14px Outfit';
+                ctx2.textAlign = 'center';
+                ctx2.fillText('Gráfica de distribución (próximamente)', typeCanvas.width/2, typeCanvas.height/2);
+            }
+        }
+
+        // ============================================
+        // RENDERIZAR TABLA
+        // ============================================
+        function renderTable(turnarounds) {
+            const tableContainer = document.getElementById('tableContainer');
+            
+            let filteredData = turnarounds;
+            if (currentFilter !== 'all') {
+                filteredData = turnarounds.filter(t => t.tipo === currentFilter);
+            }
+
+            if (filteredData.length === 0) {
+                tableContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <h3>No hay turnarounds ${currentFilter !== 'all' ? 'de tipo ' + currentFilter : ''}</h3>
+                        <p>Los turnarounds completados aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            tableContainer.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Reporte</th>
+                            <th>Tipo</th>
+                            <th>Vuelo</th>
+                            <th>Usuario</th>
+                            <th>Tiempo Total</th>
+                            <th>SLA</th>
+                            <th>Score</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredData.slice(0, 20).map(t => `
+                            <tr>
+                                <td>${t.numero}</td>
+                                <td><span class="badge badge-info">${t.tipo}</span></td>
+                                <td>${t.vuelo}</td>
+                                <td>${t.usuario}</td>
+                                <td><strong>${t.tiempoTotal}m</strong></td>
+                                <td>
+                                    <span class="badge ${t.cumpleSLA === 'SÍ' ? 'badge-success' : 'badge-danger'}">
+                                        ${t.cumpleSLA}
+                                    </span>
+                                </td>
+                                <td><span class="${getScoreClass(t.score)}">${t.score}%</span></td>
+                                <td>
+                                    <span class="badge ${t.estado === 'Completado' ? 'badge-success' : 'badge-warning'}">
+                                        ${t.estado}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function getScoreClass(score) {
+            if (score >= 90) return 'score-excellent';
+            if (score >= 70) return 'score-good';
+            return 'score-poor';
+        }
+
+        // ============================================
+        // FILTROS
+        // ============================================
+        function filterTable(type) {
+            currentFilter = type;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderTable(turnaroundsData);
+        }
+
+        // ============================================
+        // UTILIDADES
+        // ============================================
+        function refreshData() {
+            loadDashboardData();
+        }
+
+        function showLoading() {
+            const statsGrid = document.getElementById('statsGrid');
+            const chartsSection = document.getElementById('chartsSection');
+            const tableContainer = document.getElementById('tableContainer');
+            
+            const loadingHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div style="color: var(--text-secondary);">Cargando datos...</div>
+                </div>
+            `;
+            
+            statsGrid.innerHTML = loadingHTML;
+            chartsSection.innerHTML = '';
+            tableContainer.innerHTML = '';
+        }
+
+        function hideLoading() {
+            // No action needed, data will replace loading state
+        }
+
+        function showRefreshIndicator() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.classList.add('show');
+        }
+
+        function hideRefreshIndicator() {
+            const indicator = document.getElementById('refreshIndicator');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 500);
+        }
+
+        function showError(message) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <h3>Error al cargar datos</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="refreshData()" style="margin-top: 1rem;">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // ANIMATIONS
+        // ============================================
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
