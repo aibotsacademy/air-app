@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turnaround Check - Operations Hub Test</title>
+    <title>Turnaround Check - Operations Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -220,6 +220,45 @@
             font-weight: 500;
         }
 
+        /* Checkboxes para briefing */
+        .briefing-topics {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .briefing-topic-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .briefing-topic-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .briefing-topic-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .briefing-topic-item label {
+            color: #cbd5e1;
+            font-size: 15px;
+            cursor: pointer;
+            flex: 1;
+        }
+
         .navigation-buttons {
             display: flex;
             gap: 15px;
@@ -292,26 +331,9 @@
             margin-left: 10px;
         }
 
-        .review-badge {
-            display: inline-block;
-            background: rgba(251, 191, 36, 0.3);
-            color: #fbbf24;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 10px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
         textarea {
             width: 100%;
-            min-height: 120px;
+            min-height: 100px;
             padding: 14px 18px;
             background: rgba(30, 41, 59, 0.6);
             border: 1px solid rgba(59, 130, 246, 0.3);
@@ -462,17 +484,17 @@
             background: rgba(30, 41, 59, 0.8);
         }
 
-        .incident-section {
-            display: none;
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 12px;
+        option {
+            background: #1e293b;
+            color: #fff;
         }
 
-        .incident-section.active {
-            display: block;
+        .incident-form {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
         }
 
         .photo-upload-area {
@@ -635,7 +657,7 @@
                 </div>
             </div>
 
-            <!-- STEP 1+: Dynamic Questions -->
+            <!-- Dynamic Questions Container -->
             <div id="dynamicQuestions"></div>
 
             <!-- Completion Screen -->
@@ -767,19 +789,33 @@
         let incidentPhotos = [];
         let capturas360 = [];
         let hasIncident = false;
-        let unmarkedQuestions = []; // Preguntas no marcadas para revisar
+        let unmarkedQuestions = [];
+        let briefingTopics = [];
 
-        // Usuario desde sessionStorage
         const inspectionUser = JSON.parse(sessionStorage.getItem('user') || '{"username":"guest","role":"Guest"}');
         document.getElementById('usernameDisplay').textContent = inspectionUser.username;
         document.getElementById('userRole').textContent = inspectionUser.role;
+
+        // ============================================
+        // TEMAS DE BRIEFING
+        // ============================================
+        const BRIEFING_TOPICS = [
+            { id: 'seguridad', label: 'Seguridad y procedimientos' },
+            { id: 'horarios', label: 'Horarios y tiempos' },
+            { id: 'equipaje', label: 'Manejo de equipaje especial' },
+            { id: 'combustible', label: 'Requerimientos de combustible' },
+            { id: 'pasajeros', label: 'Pasajeros con necesidades especiales' },
+            { id: 'clima', label: 'Condiciones climáticas' },
+            { id: 'mantenimiento', label: 'Mantenimiento preventivo' },
+            { id: 'emergencias', label: 'Procedimientos de emergencia' }
+        ];
 
         // ============================================
         // PREGUNTAS POR TIPO DE VUELO
         // ============================================
         const QUESTIONS = {
             TURN: [
-                { key: 'briefing', label: 'Briefing', emoji: '⚡', type: 'textarea', placeholder: 'Indicar qué temas se conversaron' },
+                { key: 'briefing', label: 'Briefing', emoji: '⚡', type: 'briefing', placeholder: 'Información adicional del briefing' },
                 { key: 'inicio_fod', label: 'Inicio FOD', emoji: '🔍', type: 'checkbox' },
                 { key: 'beacon_off', label: 'Beacon OFF', emoji: '🚨', type: 'checkbox' },
                 { key: 'planta_electrica', label: 'Planta Eléctrica', emoji: '⚡', type: 'checkbox', optional: true },
@@ -796,11 +832,10 @@
                 { key: 'ultima_maleta', label: 'Última Maleta Cargada', emoji: '🧳', type: 'checkbox' },
                 { key: 'towbar', label: 'Towbar (Remolque en Posición)', emoji: '🔧', type: 'checkbox' },
                 { key: 'cierre_bines', label: 'Cierre de Bines', emoji: '🚪', type: 'checkbox' },
-                { key: 'tercer_fod', label: '3er FOD', emoji: '🔍', type: 'checkbox' },
-                { key: 'incidentes_capturas', label: 'Incidentes y Capturas 360', emoji: '📸', type: 'incident' }
+                { key: 'tercer_fod', label: '3er FOD', emoji: '🔍', type: 'checkbox' }
             ],
             'RON-ARRIVAL': [
-                { key: 'briefing', label: 'Briefing', emoji: '⚡', type: 'textarea', placeholder: 'Indicar qué temas se conversaron' },
+                { key: 'briefing', label: 'Briefing', emoji: '⚡', type: 'briefing', placeholder: 'Información adicional del briefing' },
                 { key: 'fod', label: 'FOD', emoji: '🔍', type: 'checkbox' },
                 { key: 'beacon_off', label: 'Beacon OFF', emoji: '🚨', type: 'checkbox' },
                 { key: 'planta_electrica', label: 'Planta Eléctrica', emoji: '⚡', type: 'checkbox', optional: true },
@@ -814,11 +849,10 @@
                 { key: 'segundo_fod', label: '2do FOD', emoji: '🔍', type: 'checkbox' },
                 { key: 'finaliza_descarga', label: 'Finaliza Descarga Equipaje', emoji: '🛄', type: 'checkbox' },
                 { key: 'ultimo_viaje_carreta', label: 'Último viaje carreta', emoji: '🚚', type: 'checkbox' },
-                { key: 'cierre_bines', label: 'Cierre de Bines', emoji: '🚪', type: 'checkbox' },
-                { key: 'incidentes_capturas', label: 'Incidentes y Capturas 360', emoji: '📸', type: 'incident' }
+                { key: 'cierre_bines', label: 'Cierre de Bines', emoji: '🚪', type: 'checkbox' }
             ],
             'RON-DEPARTURE': [
-                { key: 'briefing', label: 'Briefing', emoji: '⚡', type: 'textarea', placeholder: 'Indicar qué temas se conversaron' },
+                { key: 'briefing', label: 'Briefing', emoji: '⚡', type: 'briefing', placeholder: 'Información adicional del briefing' },
                 { key: 'fod', label: 'FOD', emoji: '🔍', type: 'checkbox' },
                 { key: 'avion_posicion', label: 'Avión en Posición', emoji: '✈️', type: 'checkbox' },
                 { key: 'planta_electrica', label: 'Planta Eléctrica', emoji: '⚡', type: 'checkbox', optional: true },
@@ -831,8 +865,7 @@
                 { key: 'finaliza_carga', label: 'Finaliza Carga Equipaje', emoji: '🛄', type: 'checkbox' },
                 { key: 'towbar', label: 'Towbar (Remolque en Posición)', emoji: '🔧', type: 'checkbox' },
                 { key: 'cierre_bines', label: 'Cierre de Bines', emoji: '🚪', type: 'checkbox' },
-                { key: 'tercer_fod', label: '3er FOD', emoji: '🔍', type: 'checkbox' },
-                { key: 'incidentes_capturas', label: 'Incidentes y Capturas 360', emoji: '📸', type: 'incident' }
+                { key: 'tercer_fod', label: '3er FOD', emoji: '🔍', type: 'checkbox' }
             ]
         };
 
@@ -840,11 +873,20 @@
         // FUNCIONES DE NAVEGACIÓN
         // ============================================
         function showStep(step) {
-            document.getElementById(`step${step}`)?.classList.add('active');
+            const element = document.getElementById(`step${step}`);
+            if (element) {
+                element.classList.add('active');
+                console.log('✅ Mostrando step:', step);
+            } else {
+                console.error('❌ No se encontró step:', step);
+            }
         }
 
         function hideStep(step) {
-            document.getElementById(`step${step}`)?.classList.remove('active');
+            const element = document.getElementById(`step${step}`);
+            if (element) {
+                element.classList.remove('active');
+            }
         }
 
         function updateProgress() {
@@ -853,204 +895,8 @@
             
             if (currentStep > 0 && currentStep <= questionSequence.length) {
                 const currentQuestion = questionSequence[currentStep - 1];
-                const isReview = unmarkedQuestions.some(q => q.step === currentStep);
-                const badge = isReview ? ' (REVISAR)' : '';
                 document.getElementById('stepCounter').textContent = 
-                    `Paso ${currentStep} de ${totalSteps}: ${currentQuestion.emoji} ${currentQuestion.label}${badge}`;
-            }
-        }
-
-        // ============================================
-        // NAVEGACIÓN - SIGUIENTE PREGUNTA
-        // ============================================
-        function goToNextQuestion() {
-            const currentQuestion = questionSequence[currentStep - 1];
-            
-            // Guardar respuesta según el tipo
-            if (currentQuestion.type === 'textarea') {
-                const textarea = document.getElementById(`textarea_step${currentStep}`);
-                const value = textarea.value.trim();
-                
-                inspectionResponses.push({
-                    step: currentStep,
-                    key: currentQuestion.key,
-                    item: currentQuestion.label,
-                    value: value || 'Sin información',
-                    timestamp: value ? new Date().toISOString() : null
-                });
-                
-                if (value) {
-                    sendToSheet(currentStep, `${currentQuestion.label}: ${value}`, new Date().toISOString());
-                }
-            } else if (currentQuestion.type === 'checkbox') {
-                const checkbox = document.getElementById(`check_step${currentStep}`);
-                const isChecked = checkbox.checked;
-                const timestamp = isChecked ? new Date().toISOString() : null;
-                
-                inspectionResponses.push({
-                    step: currentStep,
-                    key: currentQuestion.key,
-                    item: currentQuestion.label,
-                    value: isChecked ? 'Completado' : 'Sin marcar',
-                    timestamp: timestamp
-                });
-                
-                // Si no está marcado y no es opcional, agregarlo a la lista de revisión
-                if (!isChecked && !currentQuestion.optional) {
-                    // Verificar si ya no está en la lista de revisión
-                    if (!unmarkedQuestions.some(q => q.step === currentStep)) {
-                        unmarkedQuestions.push({
-                            step: currentStep,
-                            question: currentQuestion
-                        });
-                        console.log(`⚠️ Pregunta sin marcar agregada para revisión: ${currentQuestion.label}`);
-                    }
-                }
-                
-                if (isChecked) {
-                    sendToSheet(currentStep, currentQuestion.label, timestamp);
-                    // Remover de la lista de revisión si fue marcado
-                    unmarkedQuestions = unmarkedQuestions.filter(q => q.step !== currentStep);
-                }
-            }
-            
-            hideStep(currentStep);
-            currentStep++;
-            
-            // Verificar si llegamos al final de las preguntas normales
-            if (currentStep > questionSequence.length) {
-                // Si hay preguntas sin marcar, mostrarlas primero
-                if (unmarkedQuestions.length > 0) {
-                    console.log(`🔄 Hay ${unmarkedQuestions.length} preguntas sin marcar. Mostrando revisión...`);
-                    showReviewScreen();
-                } else {
-                    // Si no hay preguntas sin marcar, ir a incidentes
-                    showStep('incident');
-                    document.getElementById('stepCounter').textContent = 'Incidentes y Capturas 360°';
-                }
-            } else {
-                showStep(currentStep);
-                updateProgress();
-            }
-        }
-
-        // ============================================
-        // MOSTRAR PANTALLA DE REVISIÓN
-        // ============================================
-        function showReviewScreen() {
-            const reviewDiv = document.createElement('div');
-            reviewDiv.id = 'reviewScreen';
-            reviewDiv.className = 'question-card active';
-            
-            const unmarkedList = unmarkedQuestions.map(q => 
-                `<li style="color: #fbbf24; margin-bottom: 8px;">• ${q.question.emoji} ${q.question.label}</li>`
-            ).join('');
-            
-            reviewDiv.innerHTML = `
-                <h2 class="question-title">⚠️ Preguntas Sin Marcar</h2>
-                <p class="question-subtitle">Hay ${unmarkedQuestions.length} pregunta(s) que no fueron marcadas</p>
-                
-                <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <ul style="list-style: none; padding: 0;">
-                        ${unmarkedList}
-                    </ul>
-                </div>
-                
-                <p style="color: #94a3b8; font-size: 14px; text-align: center; margin-bottom: 30px;">
-                    ¿Deseas revisar estas preguntas antes de continuar?
-                </p>
-                
-                <div class="navigation-buttons">
-                    <button class="nav-btn nav-btn-prev" onclick="startReview()">
-                        ← Revisar Preguntas
-                    </button>
-                    <button class="nav-btn nav-btn-next" onclick="skipReview()">
-                        Continuar sin Revisar →
-                    </button>
-                </div>
-            `;
-            
-            const container = document.getElementById('dynamicQuestions');
-            container.appendChild(reviewDiv);
-        }
-
-        // ============================================
-        // INICIAR REVISIÓN DE PREGUNTAS
-        // ============================================
-        function startReview() {
-            // Ocultar pantalla de revisión
-            const reviewScreen = document.getElementById('reviewScreen');
-            if (reviewScreen) {
-                reviewScreen.remove();
-            }
-            
-            // Ir a la primera pregunta sin marcar
-            if (unmarkedQuestions.length > 0) {
-                currentStep = unmarkedQuestions[0].step;
-                showStep(currentStep);
-                updateProgress();
-                console.log(`🔍 Revisando pregunta: ${questionSequence[currentStep - 1].label}`);
-            }
-        }
-
-        // ============================================
-        // SALTAR REVISIÓN
-        // ============================================
-        function skipReview() {
-            console.log('⏩ Usuario decidió no revisar preguntas sin marcar');
-            
-            // Ocultar pantalla de revisión
-            const reviewScreen = document.getElementById('reviewScreen');
-            if (reviewScreen) {
-                reviewScreen.remove();
-            }
-            
-            // Ir a incidentes
-            showStep('incident');
-            document.getElementById('stepCounter').textContent = 'Incidentes y Capturas 360°';
-        }
-
-        // ============================================
-        // NAVEGACIÓN - PREGUNTA ANTERIOR
-        // ============================================
-        function goToPreviousQuestion() {
-            if (currentStep === 0.5) {
-                hideStep(0.5);
-                showStep(0.3);
-                document.getElementById('stepCounter').textContent = 'Tipo de Vuelo';
-                return;
-            }
-            
-            if (currentStep === 1) {
-                hideStep(1);
-                showStep(0.5);
-                document.getElementById('stepCounter').textContent = 'Número de Vuelo';
-                return;
-            }
-            
-            if (currentStep > 1) {
-                hideStep(currentStep);
-                currentStep--;
-                showStep(currentStep);
-                updateProgress();
-                
-                // Restaurar estado
-                const previousResponse = inspectionResponses.find(r => r.step === currentStep);
-                if (previousResponse) {
-                    const currentQuestion = questionSequence[currentStep - 1];
-                    
-                    if (currentQuestion.type === 'checkbox') {
-                        const checkbox = document.getElementById(`check_step${currentStep}`);
-                        if (checkbox) {
-                            checkbox.checked = previousResponse.value === 'Completado';
-                        }
-                    } else if (currentQuestion.type === 'textarea') {
-                        const textarea = document.getElementById(`textarea_step${currentStep}`);
-                        if (textarea && previousResponse.value !== 'Sin información') {
-                            textarea.value = previousResponse.value;
-                        }
-                    }
-                }
+                    `Paso ${currentStep} de ${totalSteps}: ${currentQuestion.emoji} ${currentQuestion.label}`;
             }
         }
 
@@ -1069,9 +915,6 @@
             document.getElementById('stepCounter').textContent = 'Tipo de Vuelo';
         }
 
-        // ============================================
-        // VOLVER A SELECCIÓN DE AEROLÍNEA
-        // ============================================
         function goBackToAirline() {
             hideStep(0.3);
             showStep(0);
@@ -1112,7 +955,6 @@
             console.log('🔢 Vuelo:', flightNum);
             console.log('🕒 Timestamp:', flightTimestamp);
             
-            // Generar preguntas dinámicas
             generateDynamicQuestions();
             
             hideStep(0.5);
@@ -1130,25 +972,42 @@
             
             questionSequence = QUESTIONS[selectedFlightType] || [];
             totalSteps = questionSequence.length;
-            unmarkedQuestions = []; // Resetear lista de revisión
+            unmarkedQuestions = [];
             
             questionSequence.forEach((q, index) => {
                 const stepNum = index + 1;
-                
                 const stepDiv = document.createElement('div');
                 stepDiv.id = `step${stepNum}`;
                 stepDiv.className = 'question-card';
                 
-                if (q.type === 'textarea') {
+                if (q.type === 'briefing') {
+                    // BRIEFING CON CHECKBOXES
+                    const topicsHTML = BRIEFING_TOPICS.map(topic => `
+                        <div class="briefing-topic-item">
+                            <input type="checkbox" 
+                                   id="topic_${topic.id}" 
+                                   value="${topic.id}"
+                                   onchange="updateBriefingTopics()">
+                            <label for="topic_${topic.id}">${topic.label}</label>
+                        </div>
+                    `).join('');
+                    
                     stepDiv.innerHTML = `
                         <h2 class="question-title">
                             ${q.emoji} ${q.label}
                         </h2>
-                        <p class="question-subtitle">${q.placeholder || 'Proporcione información detallada'}</p>
+                        <p class="question-subtitle">Seleccione los temas tratados en el briefing</p>
                         
+                        <div class="briefing-topics">
+                            <h3 style="color: #fff; font-size: 16px; margin-bottom: 15px;">Temas del Briefing:</h3>
+                            ${topicsHTML}
+                        </div>
+                        
+                        <label style="color: #cbd5e1; font-size: 14px; display: block; margin-bottom: 8px; margin-top: 20px;">
+                            Información adicional (opcional):
+                        </label>
                         <textarea id="textarea_step${stepNum}" 
-                                  placeholder="${q.placeholder || 'Escriba aquí...'}"
-                                  style="margin-top: 20px;"></textarea>
+                                  placeholder="${q.placeholder || 'Escriba aquí...'}"></textarea>
                         
                         <div class="navigation-buttons">
                             <button class="nav-btn nav-btn-prev" onclick="goToPreviousQuestion()">
@@ -1192,8 +1051,6 @@
                             </button>
                         </div>
                     `;
-                } else if (q.type === 'incident') {
-                    // Este se maneja aparte
                 }
                 
                 container.appendChild(stepDiv);
@@ -1201,6 +1058,153 @@
             
             // Agregar paso de incidentes
             addIncidentStep();
+            
+            console.log('✅ Preguntas generadas:', questionSequence.length);
+        }
+
+        // ============================================
+        // ACTUALIZAR TEMAS DE BRIEFING
+        // ============================================
+        function updateBriefingTopics() {
+            briefingTopics = BRIEFING_TOPICS
+                .filter(topic => document.getElementById(`topic_${topic.id}`)?.checked)
+                .map(topic => topic.label);
+            
+            console.log('📋 Temas seleccionados:', briefingTopics);
+        }
+
+        // ============================================
+        // NAVEGACIÓN - SIGUIENTE PREGUNTA
+        // ============================================
+        function goToNextQuestion() {
+            const currentQuestion = questionSequence[currentStep - 1];
+            
+            if (currentQuestion.type === 'briefing') {
+                const textarea = document.getElementById(`textarea_step${currentStep}`);
+                const value = textarea.value.trim();
+                
+                updateBriefingTopics();
+                
+                const briefingData = {
+                    topics: briefingTopics,
+                    additionalInfo: value || 'Sin información adicional'
+                };
+                
+                inspectionResponses.push({
+                    step: currentStep,
+                    key: currentQuestion.key,
+                    item: currentQuestion.label,
+                    value: `Temas: ${briefingTopics.join(', ') || 'Ninguno'} | ${briefingData.additionalInfo}`,
+                    timestamp: new Date().toISOString(),
+                    briefingData: briefingData
+                });
+                
+                sendToSheet(currentStep, `Briefing - Temas: ${briefingTopics.join(', ')}`, new Date().toISOString());
+                
+            } else if (currentQuestion.type === 'checkbox') {
+                const checkbox = document.getElementById(`check_step${currentStep}`);
+                const isChecked = checkbox.checked;
+                const timestamp = isChecked ? new Date().toISOString() : null;
+                
+                inspectionResponses.push({
+                    step: currentStep,
+                    key: currentQuestion.key,
+                    item: currentQuestion.label,
+                    value: isChecked ? 'Completado' : 'Sin marcar',
+                    timestamp: timestamp,
+                    optional: currentQuestion.optional || false
+                });
+                
+                if (!isChecked && !currentQuestion.optional) {
+                    if (!unmarkedQuestions.some(q => q.step === currentStep)) {
+                        unmarkedQuestions.push({
+                            step: currentStep,
+                            question: currentQuestion
+                        });
+                        console.log(`⚠️ Pregunta REQUERIDA sin marcar: ${currentQuestion.label}`);
+                    }
+                } else if (isChecked) {
+                    sendToSheet(currentStep, currentQuestion.label, timestamp);
+                    unmarkedQuestions = unmarkedQuestions.filter(q => q.step !== currentStep);
+                }
+            }
+            
+            hideStep(currentStep);
+            currentStep++;
+            
+            if (currentStep > questionSequence.length) {
+                if (unmarkedQuestions.length > 0) {
+                    console.log(`🔄 Hay ${unmarkedQuestions.length} preguntas REQUERIDAS sin marcar. Volviendo a la primera...`);
+                    currentStep = unmarkedQuestions[0].step;
+                    showStep(currentStep);
+                    updateProgress();
+                    alert(`⚠️ Hay ${unmarkedQuestions.length} pregunta(s) requerida(s) sin marcar. Por favor complételas.`);
+                } else {
+                    console.log('✅ Todas las preguntas completadas. Mostrando incidentes...');
+                    showStep('incident');
+                    document.getElementById('stepCounter').textContent = '📸 Incidentes y Capturas 360°';
+                }
+            } else {
+                showStep(currentStep);
+                updateProgress();
+            }
+        }
+
+        // ============================================
+        // NAVEGACIÓN - PREGUNTA ANTERIOR
+        // ============================================
+        function goToPreviousQuestion() {
+            if (currentStep === 0.5) {
+                hideStep(0.5);
+                showStep(0.3);
+                document.getElementById('stepCounter').textContent = 'Tipo de Vuelo';
+                return;
+            }
+            
+            if (currentStep === 1) {
+                hideStep(1);
+                showStep(0.5);
+                document.getElementById('stepCounter').textContent = 'Número de Vuelo';
+                return;
+            }
+            
+            if (currentStep > 1) {
+                hideStep(currentStep);
+                currentStep--;
+                showStep(currentStep);
+                updateProgress();
+                
+                // Restaurar estado
+                const previousResponse = inspectionResponses.find(r => r.step === currentStep);
+                if (previousResponse) {
+                    const currentQuestion = questionSequence[currentStep - 1];
+                    
+                    if (currentQuestion.type === 'checkbox') {
+                        const checkbox = document.getElementById(`check_step${currentStep}`);
+                        if (checkbox) {
+                            checkbox.checked = previousResponse.value === 'Completado';
+                        }
+                    } else if (currentQuestion.type === 'briefing') {
+                        const textarea = document.getElementById(`textarea_step${currentStep}`);
+                        if (textarea && previousResponse.briefingData) {
+                            textarea.value = previousResponse.briefingData.additionalInfo !== 'Sin información adicional' 
+                                ? previousResponse.briefingData.additionalInfo 
+                                : '';
+                            
+                            // Restaurar checkboxes de temas
+                            if (previousResponse.briefingData.topics) {
+                                previousResponse.briefingData.topics.forEach(topicLabel => {
+                                    const topic = BRIEFING_TOPICS.find(t => t.label === topicLabel);
+                                    if (topic) {
+                                        const checkbox = document.getElementById(`topic_${topic.id}`);
+                                        if (checkbox) checkbox.checked = true;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // ============================================
@@ -1218,64 +1222,64 @@
                 <p class="question-subtitle">Reporte cualquier incidente y capture fotos de la aeronave</p>
                 
                 <div style="margin: 20px 0;">
-                    <label class="custom-checkbox" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" id="hasIncidentCheck" onchange="toggleIncidentSection()">
-                        <span class="checkmark" style="width: 30px; height: 30px;">
-                            <svg viewBox="0 0 24 24" fill="none" style="width: 20px; height: 20px;">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </span>
-                        <span style="color: #fff; font-size: 16px;">¿Hubo algún incidente?</span>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 15px; background: rgba(30, 41, 59, 0.4); border-radius: 12px;">
+                        <input type="checkbox" 
+                               id="hasIncidentCheck" 
+                               onchange="toggleIncidentSection()"
+                               style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="color: #fff; font-size: 16px; font-weight: 600;">¿Hubo algún incidente?</span>
                     </label>
                 </div>
                 
-                <div id="incidentSection" class="incident-section">
-                    <h3 style="color: #fff; margin-bottom: 15px;">⚠️ Detalles del Incidente</h3>
-                    
-                    <label style="color: #cbd5e1; font-size: 14px; display: block; margin-bottom: 8px;">
-                        Descripción del incidente *
-                    </label>
-                    <textarea id="incidentDescription" 
-                              placeholder="Describa el incidente detalladamente..."
-                              style="margin-bottom: 20px;"></textarea>
-                    
-                    <label style="color: #cbd5e1; font-size: 14px; display: block; margin-bottom: 8px;">
-                        Tipo de incidente
-                    </label>
-                    <select id="incidentType">
-                        <option value="">-- Seleccione --</option>
-                        <option value="Daño a aeronave">Daño a aeronave</option>
-                        <option value="Derrame de combustible">Derrame de combustible</option>
-                        <option value="Objeto extraño (FOD)">Objeto extraño (FOD)</option>
-                        <option value="Falla de equipo">Falla de equipo terrestre</option>
-                        <option value="Retraso operacional">Retraso operacional</option>
-                        <option value="Otro">Otro</option>
-                    </select>
-                    
-                    <label style="color: #cbd5e1; font-size: 14px; display: block; margin-bottom: 8px;">
-                        Severidad
-                    </label>
-                    <select id="incidentSeverity" style="margin-bottom: 20px;">
-                        <option value="Baja">🟢 Baja</option>
-                        <option value="Media">🟡 Media</option>
-                        <option value="Alta">🔴 Alta</option>
-                    </select>
-                    
-                    <div class="photo-upload-area" onclick="document.getElementById('incidentPhotoInput').click()">
-                        <p style="color: #cbd5e1; margin-bottom: 5px; font-weight: 600;">📷 Fotos del Incidente</p>
-                        <p style="color: #64748b; font-size: 12px;">Click para seleccionar desde galería</p>
+                <div id="incidentFormContainer" style="display: none;">
+                    <div class="incident-form">
+                        <h3 style="color: #fff; margin-bottom: 15px;">⚠️ Detalles del Incidente</h3>
+                        
+                        <label style="color: #cbd5e1; font-size: 14px; display: block; margin-bottom: 8px;">
+                            Descripción del incidente *
+                        </label>
+                        <textarea id="incidentDescription" 
+                                  placeholder="Describa el incidente detalladamente..."
+                                  style="margin-bottom: 15px;"></textarea>
+                        
+                        <label style="color: #cbd5e1; font-size: 14px; display: block; margin-bottom: 8px;">
+                            Tipo de incidente
+                        </label>
+                        <select id="incidentType" style="margin-bottom: 15px;">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Daño a aeronave">Daño a aeronave</option>
+                            <option value="Derrame de combustible">Derrame de combustible</option>
+                            <option value="Objeto extraño (FOD)">Objeto extraño (FOD)</option>
+                            <option value="Falla de equipo">Falla de equipo terrestre</option>
+                            <option value="Retraso operacional">Retraso operacional</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                        
+                        <label style="color: #cbd5e1; font-size: 14px; display: block; margin-bottom: 8px;">
+                            Severidad
+                        </label>
+                        <select id="incidentSeverity" style="margin-bottom: 15px;">
+                            <option value="Baja">🟢 Baja</option>
+                            <option value="Media">🟡 Media</option>
+                            <option value="Alta">🔴 Alta</option>
+                        </select>
+                        
+                        <div class="photo-upload-area" onclick="document.getElementById('incidentPhotoInput').click()">
+                            <p style="color: #cbd5e1; margin-bottom: 5px; font-weight: 600;">📷 Fotos del Incidente</p>
+                            <p style="color: #64748b; font-size: 12px;">Click para seleccionar desde galería</p>
+                        </div>
+                        <input type="file" 
+                               id="incidentPhotoInput" 
+                               accept="image/*" 
+                               multiple 
+                               capture="environment"
+                               style="display: none;" 
+                               onchange="handlePhotoUpload(event, 'incident')">
+                        <div id="incidentPhotoPreview" class="photo-preview-container"></div>
                     </div>
-                    <input type="file" 
-                           id="incidentPhotoInput" 
-                           accept="image/*" 
-                           multiple 
-                           capture="environment"
-                           style="display: none;" 
-                           onchange="handlePhotoUpload(event, 'incident')">
-                    <div id="incidentPhotoPreview" class="photo-preview-container"></div>
                 </div>
                 
-                <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(59, 130, 246, 0.2);">
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(59, 130, 246, 0.2);">
                     <h3 style="color: #fff; margin-bottom: 10px;">📸 Capturas 360° de la Aeronave</h3>
                     <p style="color: #94a3b8; font-size: 14px; margin-bottom: 15px;">
                         Capture fotos de todos los ángulos de la aeronave para documentación
@@ -1299,30 +1303,14 @@
                     <button class="nav-btn nav-btn-prev" onclick="returnToLastQuestion()">
                         ← Anterior
                     </button>
-                    <button class="nav-btn nav-btn-next" onclick="submitIncidentAndCapturas(${totalSteps + 1})">
-                        Finalizar Inspección ✓
+                    <button class="nav-btn nav-btn-next" onclick="validateAndSubmit()">
+                        <span id="finalizeButtonText">Finalizar Inspección ✓</span>
                     </button>
                 </div>
             `;
             
             container.appendChild(incidentDiv);
-        }
-
-        // ============================================
-        // RETORNAR A ÚLTIMA PREGUNTA
-        // ============================================
-        function returnToLastQuestion() {
-            hideStep('incident');
-            
-            // Si hay pantalla de revisión, eliminarla
-            const reviewScreen = document.getElementById('reviewScreen');
-            if (reviewScreen) {
-                reviewScreen.remove();
-            }
-            
-            currentStep = questionSequence.length;
-            showStep(currentStep);
-            updateProgress();
+            console.log('✅ Paso de incidentes agregado');
         }
 
         // ============================================
@@ -1330,13 +1318,51 @@
         // ============================================
         function toggleIncidentSection() {
             hasIncident = document.getElementById('hasIncidentCheck').checked;
-            const section = document.getElementById('incidentSection');
+            const formContainer = document.getElementById('incidentFormContainer');
+            const finalizeText = document.getElementById('finalizeButtonText');
+            
+            console.log('🔄 Toggle incidente:', hasIncident);
             
             if (hasIncident) {
-                section.classList.add('active');
+                formContainer.style.display = 'block';
+                finalizeText.textContent = 'Enviar Reporte con Incidente ✓';
+                console.log('✅ Formulario de incidente VISIBLE');
             } else {
-                section.classList.remove('active');
+                formContainer.style.display = 'none';
+                finalizeText.textContent = 'Finalizar Inspección ✓';
+                console.log('❌ Formulario de incidente OCULTO');
             }
+        }
+
+        // ============================================
+        // RETORNAR A ÚLTIMA PREGUNTA
+        // ============================================
+        function returnToLastQuestion() {
+            hideStep('incident');
+            currentStep = questionSequence.length;
+            showStep(currentStep);
+            updateProgress();
+        }
+
+        // ============================================
+        // VALIDAR Y ENVIAR
+        // ============================================
+        function validateAndSubmit() {
+            if (hasIncident) {
+                const description = document.getElementById('incidentDescription').value.trim();
+                
+                if (!description) {
+                    alert('⚠️ Por favor describe el incidente antes de continuar');
+                    document.getElementById('incidentDescription').focus();
+                    document.getElementById('incidentDescription').style.border = '2px solid #ef4444';
+                    setTimeout(() => {
+                        document.getElementById('incidentDescription').style.border = '1px solid rgba(59, 130, 246, 0.3)';
+                    }, 2000);
+                    return;
+                }
+            }
+            
+            submitIncidentAndCapturas();
         }
 
         // ============================================
@@ -1379,6 +1405,7 @@
                     `;
                     
                     previewContainer.appendChild(previewItem);
+                    console.log(`✅ Foto agregada: ${file.name} (${type})`);
                 };
                 
                 reader.readAsDataURL(file);
@@ -1387,9 +1414,6 @@
             event.target.value = '';
         }
 
-        // ============================================
-        // ELIMINAR FOTO
-        // ============================================
         function removePhoto(type, index) {
             const targetArray = type === 'incident' ? incidentPhotos : capturas360;
             const previewContainer = type === 'incident' 
@@ -1416,7 +1440,7 @@
         // ============================================
         // ENVIAR INCIDENTES Y CAPTURAS
         // ============================================
-        function submitIncidentAndCapturas(step) {
+        function submitIncidentAndCapturas() {
             const timestamp = new Date().toISOString();
             
             let incidentData = {
@@ -1433,12 +1457,6 @@
                 const type = document.getElementById('incidentType').value;
                 const severity = document.getElementById('incidentSeverity').value;
                 
-                if (!description) {
-                    alert('⚠️ Por favor describe el incidente');
-                    document.getElementById('incidentDescription').focus();
-                    return;
-                }
-                
                 incidentData = {
                     hasIncident: true,
                     description: description,
@@ -1447,10 +1465,16 @@
                     photoCount: incidentPhotos.length,
                     timestamp: timestamp
                 };
+                
+                console.log('⚠️ Incidente reportado:', incidentData);
+            } else {
+                console.log('✅ Sin incidentes reportados');
             }
             
+            console.log('📸 Capturas 360:', capturas360.length);
+            
             inspectionResponses.push({
-                step: step,
+                step: totalSteps + 1,
                 key: 'incidentes_capturas',
                 item: 'Incidentes y Capturas 360',
                 value: 'Completado',
@@ -1461,10 +1485,10 @@
             });
             
             const itemText = hasIncident 
-                ? `Incidente: ${incidentData.type} - ${incidentData.severity} | Fotos Incidente: ${incidentPhotos.length} | Capturas 360: ${capturas360.length}`
+                ? `Incidente: ${incidentData.type} - ${incidentData.severity} | Fotos: ${incidentPhotos.length} | Capturas 360: ${capturas360.length}`
                 : `Sin Incidentes | Capturas 360: ${capturas360.length}`;
             
-            sendToSheet(step, itemText, timestamp);
+            sendToSheet(totalSteps + 1, itemText, timestamp);
             
             completeInspection();
         }
@@ -1512,8 +1536,8 @@
             document.getElementById('summaryDateTime').textContent = dateTimeStr;
             
             // Calcular métricas
-            const totalItems = questionSequence.filter(q => q.type !== 'incident').length;
-            const completedItems = inspectionResponses.filter(r => r.value === 'Completado').length;
+            const totalItems = questionSequence.length;
+            const completedItems = inspectionResponses.filter(r => r.value === 'Completado' || r.value.startsWith('Temas:')).length;
             const unmarkedItems = totalItems - completedItems;
             const completionRate = ((completedItems / totalItems) * 100).toFixed(1);
             
@@ -1522,7 +1546,7 @@
             document.getElementById('summaryUnmarkedItems').textContent = unmarkedItems;
             document.getElementById('summaryCompletionRate').textContent = completionRate + '%';
             
-            // Métricas clave (Beacon OFF, FOD checks, etc.)
+            // Métricas clave
             generateKeyMetrics();
             
             // Resumen de incidentes
@@ -1567,14 +1591,8 @@
             
             console.log('✅ Inspección completada');
             console.log('📊 Número de reporte:', reportNumber);
-            console.log('📊 Total items:', totalItems);
-            console.log('✅ Completados:', completedItems);
-            console.log('⚠️ Sin marcar:', unmarkedItems);
         }
 
-        // ============================================
-        // GENERAR NÚMERO DE REPORTE
-        // ============================================
         function generateReportNumber() {
             const date = new Date();
             const year = date.getFullYear().toString().slice(-2);
@@ -1585,13 +1603,9 @@
             return `${selectedAirline}-${year}${month}${day}-${random}`;
         }
 
-        // ============================================
-        // GENERAR MÉTRICAS CLAVE
-        // ============================================
         function generateKeyMetrics() {
             const keyMetricsContent = document.getElementById('keyMetricsContent');
             
-            // Buscar métricas específicas importantes
             const beaconOff = inspectionResponses.find(r => r.key === 'beacon_off');
             const fodChecks = inspectionResponses.filter(r => 
                 r.key && (r.key.includes('fod') || r.key === 'inicio_fod' || r.key === 'segundo_fod' || r.key === 'tercer_fod')
@@ -1601,7 +1615,6 @@
             
             let metricsHTML = '';
             
-            // Beacon OFF
             if (beaconOff) {
                 const status = beaconOff.value === 'Completado' ? '✅' : '⚠️';
                 const color = beaconOff.value === 'Completado' ? '#10b981' : '#fbbf24';
@@ -1615,7 +1628,6 @@
                 `;
             }
             
-            // FOD Checks
             const fodCompleted = fodChecks.filter(f => f.value === 'Completado').length;
             const fodTotal = fodChecks.length;
             if (fodTotal > 0) {
@@ -1630,7 +1642,6 @@
                 `;
             }
             
-            // Waste & Water
             if (wasteWater) {
                 const status = wasteWater.value === 'Completado' ? '✅' : '⚠️';
                 const color = wasteWater.value === 'Completado' ? '#10b981' : '#fbbf24';
@@ -1644,7 +1655,6 @@
                 `;
             }
             
-            // Cierre de Bines
             if (cierreBines) {
                 const status = cierreBines.value === 'Completado' ? '✅' : '⚠️';
                 const color = cierreBines.value === 'Completado' ? '#10b981' : '#fbbf24';
@@ -1659,39 +1669,6 @@
             }
             
             keyMetricsContent.innerHTML = metricsHTML;
-        }
-
-        // ============================================
-        // EXPORTAR REPORTE
-        // ============================================
-        function exportReport() {
-            const reportData = {
-                reportNumber: document.getElementById('reportNumber').textContent,
-                airline: selectedAirline,
-                flightType: selectedFlightType,
-                flightNumber: flightNumberValue,
-                inspector: inspectionUser.username,
-                timestamp: flightTimestamp,
-                responses: inspectionResponses,
-                hasIncident: hasIncident,
-                incidentPhotosCount: incidentPhotos.length,
-                capturas360Count: capturas360.length,
-                metrics: {
-                    total: questionSequence.filter(q => q.type !== 'incident').length,
-                    completed: inspectionResponses.filter(r => r.value === 'Completado').length
-                }
-            };
-            
-            const dataStr = JSON.stringify(reportData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `reporte-${reportData.reportNumber}.json`;
-            link.click();
-            
-            console.log('📥 Reporte exportado:', reportData.reportNumber);
-            alert('✅ Reporte exportado exitosamente');
         }
 
         // ============================================
@@ -1711,15 +1688,11 @@
                 role: inspectionUser.role
             };
             
-            // Verificar si estamos en file:// (modo local)
             if (window.location.protocol === 'file:') {
-                console.log('ℹ️ Modo local detectado - Los datos se guardan localmente');
-                console.log('📋 Datos que se enviarían:', payload);
-                
+                console.log('ℹ️ Modo local - Guardando en localStorage');
                 const savedData = JSON.parse(localStorage.getItem('inspectionData') || '[]');
                 savedData.push(payload);
                 localStorage.setItem('inspectionData', JSON.stringify(savedData));
-                
                 console.log('✅ Guardado localmente:', item);
                 return;
             }
@@ -1732,12 +1705,45 @@
             }).then(() => {
                 console.log('✅ Enviado a Sheets:', item);
             }).catch(err => {
-                console.warn('⚠️ No se pudo conectar con Google Sheets');
-                
+                console.warn('⚠️ Error enviando a Sheets:', err);
                 const savedData = JSON.parse(localStorage.getItem('inspectionData') || '[]');
                 savedData.push(payload);
                 localStorage.setItem('inspectionData', JSON.stringify(savedData));
             });
+        }
+
+        // ============================================
+        // EXPORTAR REPORTE
+        // ============================================
+        function exportReport() {
+            const reportData = {
+                reportNumber: document.getElementById('reportNumber').textContent,
+                airline: selectedAirline,
+                flightType: selectedFlightType,
+                flightNumber: flightNumberValue,
+                inspector: inspectionUser.username,
+                timestamp: flightTimestamp,
+                responses: inspectionResponses,
+                hasIncident: hasIncident,
+                incidentPhotosCount: incidentPhotos.length,
+                capturas360Count: capturas360.length,
+                briefingTopics: briefingTopics,
+                metrics: {
+                    total: questionSequence.length,
+                    completed: inspectionResponses.filter(r => r.value === 'Completado' || r.value.startsWith('Temas:')).length
+                }
+            };
+            
+            const dataStr = JSON.stringify(reportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `reporte-${reportData.reportNumber}.json`;
+            link.click();
+            
+            console.log('📥 Reporte exportado:', reportData.reportNumber);
+            alert('✅ Reporte exportado exitosamente');
         }
 
         // ============================================
@@ -1756,6 +1762,7 @@
             capturas360 = [];
             hasIncident = false;
             unmarkedQuestions = [];
+            briefingTopics = [];
             
             document.getElementById('airlineSelect').value = '';
             document.getElementById('flightTypeSelect').value = '';
@@ -1809,7 +1816,7 @@
         }
 
         // ============================================
-        // ANIMACIÓN 3D (Three.js)
+        // ANIMACIÓN 3D
         // ============================================
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -1842,11 +1849,10 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Mostrar modo de guardado
+        // Indicador de modo
         window.addEventListener('load', () => {
             if (window.location.protocol === 'file:') {
                 console.log('⚠️ MODO LOCAL: Los datos se guardan en localStorage');
-                console.log('💡 Para enviar a Google Sheets, abre el archivo en un servidor HTTP');
                 
                 const modeIndicator = document.createElement('div');
                 modeIndicator.style.cssText = `
@@ -1863,22 +1869,19 @@
                     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 `;
                 modeIndicator.textContent = '💾 MODO LOCAL';
-                modeIndicator.title = 'Los datos se guardan en tu navegador. Para enviar a Google Sheets, usa un servidor HTTP.';
                 document.body.appendChild(modeIndicator);
                 
                 const savedData = JSON.parse(localStorage.getItem('inspectionData') || '[]');
                 if (savedData.length > 0) {
-                    console.log(`💾 Hay ${savedData.length} registros guardados localmente`);
-                    console.log('💡 Ejecuta exportLocalData() en la consola para descargarlos');
+                    console.log(`💾 Hay ${savedData.length} registros guardados`);
                 }
             } else {
-                console.log('✅ MODO SERVIDOR: Los datos se envían a Google Sheets');
+                console.log('✅ MODO SERVIDOR');
             }
         });
 
         console.log('📋 Turnaround Check cargado');
         console.log('👤 Usuario:', inspectionUser.username);
-        console.log('👔 Rol:', inspectionUser.role);
     </script>
 </body>
 </html>
