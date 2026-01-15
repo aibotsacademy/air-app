@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turnaround Check - Operations Hub7:15</title>
+    <title>Turnaround Check - Operations 7:19</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnaround Check - Operations Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -808,7 +815,7 @@
         // ============================================
         // CONFIGURACIÓN DEL APPS SCRIPT
         // ============================================
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzi0Rc7JWLW5rjjAKLAHbA494BBU3keV4lP1JIPv0rghvmsxC-i6fvPuGe3l3Me5QRj/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwewgMxHhXfE0ZwVAWjOeJ_If-rhsoPU-u_lJGGwMHBCC41ftvPPqHCOQCbClS4mnvM/exec';
 
         // ============================================
         // VARIABLES GLOBALES
@@ -832,7 +839,7 @@
         // ============================================
         // DEFINICIÓN DE PREGUNTAS POR TIPO
         // ============================================
-        const QUESTIONS = {
+                const QUESTIONS = {
             TURN: [
                 { key: 'briefing', label: 'Briefing', emoji: '⚡', type: 'textarea', placeholder: 'Indicar qué temas se conversaron' },
                 { key: 'inicio_fod', label: 'Inicio FOD', emoji: '🔍', type: 'checkbox' },
@@ -1273,31 +1280,17 @@
                 type: selectedFlightType
             });
 
-            // Crear FormData para POST (evita CORS)
-            const formData = new URLSearchParams();
-            formData.append('user', inspectionUser.username);
-            formData.append('role', inspectionUser.role);
-            formData.append('type', selectedFlightType);
-            formData.append('flight', flightNumberValue);
-            formData.append('step', step.toString());
-            formData.append('item', item);
-            formData.append('timestamp', timestamp);
+            const url = SCRIPT_URL + 
+                '?user=' + encodeURIComponent(inspectionUser.username) +
+                '&role=' + encodeURIComponent(inspectionUser.role) +
+                '&type=' + encodeURIComponent(selectedFlightType) +
+                '&flight=' + encodeURIComponent(flightNumberValue) +
+                '&step=' + step +
+                '&item=' + encodeURIComponent(item) +
+                '&timestamp=' + encodeURIComponent(timestamp);
 
-            // Enviar con POST
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.text())
-                .then(text => {
-                    console.log('📥 Respuesta cruda:', text);
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        console.log('⚠️ Respuesta no es JSON válido, asumiendo éxito');
-                        return { success: true, step: step };
-                    }
-                })
+            fetch(url)
+                .then(response => response.json())
                 .then(data => {
                     console.log('✅ Respuesta del servidor:', data);
                 })
@@ -1866,4 +1859,3 @@
     </script>
 </body>
 </html>
-
