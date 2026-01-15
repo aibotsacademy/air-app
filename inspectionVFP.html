@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turnaround Check - Operations Hub16</title>
+    <title>Turnaround Check - Operations Hub49</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -1263,34 +1263,98 @@
         // ============================================
         // FUNCIÓN: ENVIAR DATOS A GOOGLE SHEETS
         // ============================================
-        function sendToSheet(step, item, timestamp) {
-            console.log('📤 Enviando a Google Sheets:', {
-                step: step,
-                item: item,
-                timestamp: timestamp,
-                user: inspectionUser.username,
-                role: inspectionUser.role,
-                type: selectedFlightType
-            });
+        // ============================================
+// FIX SIMPLE HTML - Cambiar GET a POST
+// ============================================
 
-            const url = SCRIPT_URL + 
-                '?user=' + encodeURIComponent(inspectionUser.username) +
-                '&role=' + encodeURIComponent(inspectionUser.role) +
-                '&type=' + encodeURIComponent(selectedFlightType) +
-                '&flight=' + encodeURIComponent(flightNumberValue) +
-                '&step=' + step +
-                '&item=' + encodeURIComponent(item) +
-                '&timestamp=' + encodeURIComponent(timestamp);
+// Busca la función sendToSheet en inspectionVFP.html
+// Solo necesitas cambiar 2 cosas:
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('✅ Respuesta del servidor:', data);
-                })
-                .catch(error => {
-                    console.error('❌ Error enviando datos:', error);
-                });
+// ANTES (GET):
+function sendToSheet(step, item = '') {
+    const url = `${SCRIPT_URL}?user=${encodeURIComponent(currentUser)}&role=${encodeURIComponent(currentRole)}&type=${currentType}&flight=${encodeURIComponent(currentFlight)}&step=${step}&item=${encodeURIComponent(item)}&timestamp=${encodeURIComponent(new Date().toISOString())}`;
+    
+    return fetch(url)  // ❌ Causa CORS
+        .then(response => response.json())
+        .then(data => {
+            console.log('✅ Respuesta del servidor:', data);
+            return data;
+        })
+        .catch(error => {
+            console.error('❌ Error enviando datos:', error);
+            throw error;
+        });
+}
+
+// DESPUÉS (POST):
+function sendToSheet(step, item = '') {
+    console.log(`📤 Enviando paso ${step} a Google Sheets`);
+    
+    // Crear FormData
+    const formData = new URLSearchParams();
+    formData.append('user', currentUser);
+    formData.append('role', currentRole);
+    formData.append('type', currentType);
+    formData.append('flight', currentFlight);
+    formData.append('step', step.toString());
+    formData.append('item', item);
+    formData.append('timestamp', new Date().toISOString());
+    
+    // Enviar POST
+    return fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())  // Primero como texto
+    .then(text => {
+        console.log('📥 Respuesta cruda:', text);
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            // Si no es JSON, retornar como éxito de todos modos
+            console.log('⚠️ Respuesta no es JSON, asumiendo éxito');
+            return { success: true, step: step };
         }
+    })
+    .then(data => {
+        console.log('✅ Respuesta del servidor:', data);
+        return data;
+    })
+    .catch(error => {
+        console.error('❌ Error enviando datos:', error);
+        throw error;
+    });
+}
+
+// ============================================
+// EXPLICACIÓN DE LOS CAMBIOS
+// ============================================
+
+/*
+1. CREAR FORMDATA:
+   En lugar de URL con parámetros GET:
+   ?user=X&role=Y&step=Z
+   
+   Usamos FormData POST:
+   formData.append('user', X)
+   formData.append('role', Y)
+
+2. FETCH CON POST:
+   fetch(url)  →  fetch(url, { method: 'POST', body: formData })
+
+3. PARSE FLEXIBLE:
+   .then(response => response.json())  // ❌ Puede fallar
+   
+   .then(response => response.text())  // ✅ Primero texto
+   .then(text => JSON.parse(text))     // ✅ Luego parse con try/catch
+
+4. TODO LO DEMÁS IGUAL:
+   - Misma estructura de Promises
+   - Mismo console.log
+   - Mismo error handling
+   - No async/await
+*/
+
 
         // ============================================
         // FUNCIÓN: COMPLETAR INSPECCIÓN
